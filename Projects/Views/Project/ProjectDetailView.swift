@@ -13,7 +13,8 @@ import Combine
 @MainActor
 class ProjectDetailViewModel: ObservableObject {
     let project: Project
-    private let modelContext: ModelContext
+    let modelContext: ModelContext
+    let dataService: DataService
 
     @Published var columns: [BoardColumn] = []
     @Published var tasks: [Task] = []
@@ -27,7 +28,6 @@ class ProjectDetailViewModel: ObservableObject {
 
     private let projectRepo: ProjectRepository
     private let taskRepo: TaskRepository
-    private let dataService: DataService
 
     init(
         project: Project,
@@ -122,15 +122,37 @@ class ProjectDetailViewModel: ObservableObject {
 // MARK: - View Type
 enum ViewType: String, CaseIterable, Identifiable {
     case board = "Board"
+    case calendar = "Calendar"
+    case timeline = "Timeline"
     case list = "List"
-    
+
     var id: String { rawValue }
-    
+
     var icon: String {
         switch self {
         case .board: return "square.grid.2x2.fill"
+        case .calendar: return "calendar"
+        case .timeline: return "timeline"
         case .list: return "list.bullet"
         }
+    }
+}
+
+// MARK: - Filter Options
+struct TaskFilterOptions {
+    var status: Set<String> = []
+    var priority: Set<String> = []
+    var assigneeId: String?
+    var labelId: String?
+    var dueDateRange: DateRange?
+    var showOverdueOnly: Bool = false
+    var showBlockedOnly: Bool = false
+
+    enum DateRange {
+        case today
+        case thisWeek
+        case thisMonth
+        case custom(start: Date, end: Date)
     }
 }
 
@@ -147,6 +169,11 @@ struct ProjectDetailView: View {
     @State private var showingCreateTask = false
     @State private var selectedTask: Task? = nil
     @State private var selectedViewType: ViewType = .board
+    @State private var showOverdueOnly: Bool = false
+    @State private var showBlockedOnly: Bool = false
+    
+    // FIXED: Moved selectedStatuses to the correct scope
+    @State private var selectedStatuses: Set<String> = []
 
     var body: some View {
         Group {
@@ -177,9 +204,14 @@ struct ProjectDetailView: View {
             Group {
                 switch selectedViewType {
                 case .board:
-                    kanbanBoard(viewModel: viewModel)
+                    KanbanBoardView(viewModel: viewModel)
+                case .calendar:
+                    CalendarView(projectId: project.id, dataService: viewModel.dataService)
+                case .timeline:
+                    TimelineView(projectId: project.id, dataService: viewModel.dataService)
                 case .list:
-                    taskListView(viewModel: viewModel)
+                    // FIXED: Pass selectedStatuses to EnhancedTaskListView
+                    EnhancedTaskListView(viewModel: viewModel, selectedStatuses: $selectedStatuses)
                 }
             }
         }
@@ -193,8 +225,52 @@ struct ProjectDetailView: View {
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                TFButton(title: "New Task", style: .primary, size: .small, icon: "plus") {
-                    showingCreateTask = true
+                // FIXED: Toolbar menu structure
+                Menu {
+                    // Filter Menu
+                    Menu {
+                        Toggle("Overdue Only", isOn: $showOverdueOnly)
+                        Toggle("Blocked Only", isOn: $showBlockedOnly)
+
+                        Divider()
+
+                        ForEach(Task.Status.allCases) { status in
+                            Toggle(status.rawValue, isOn: statusBinding(for: status))
+                        }
+                    } label: {
+                        SwiftUI.Label("Filter", systemImage: "line.3.horizontal.decrease.circle")
+                    }
+
+                    // Templates
+                    NavigationLink {
+                        TaskTemplatesView(projectId: project.id, dataService: viewModel.dataService)
+                    } label: {
+                        SwiftUI.Label("Templates", systemImage: "doc.text.badge.plus")
+                    }
+
+                    // Custom Fields
+                    NavigationLink {
+                        CustomFieldsView(projectId: project.id, dataService: viewModel.dataService)
+                    } label: {
+                        SwiftUI.Label("Custom Fields", systemImage: "text.badge.checkmark")
+                    }
+
+                    // Invitations
+                    NavigationLink {
+                        InvitationView(targetType: .project, targetId: project.id, dataService: viewModel.dataService)
+                    } label: {
+                        SwiftUI.Label("Team", systemImage: "person.2.fill")
+                    }
+
+                    Divider()
+
+                    Button(action: {
+                        showingCreateTask = true
+                    }) {
+                        SwiftUI.Label("New Task", systemImage: "plus")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
                 }
             }
         }
@@ -206,6 +282,20 @@ struct ProjectDetailView: View {
         }
     }
     
+    // FIXED: Moved statusBinding helper to the correct scope (ProjectDetailView)
+    private func statusBinding(for status: Task.Status) -> Binding<Bool> {
+        Binding<Bool>(
+            get: { selectedStatuses.contains(status.rawValue.lowercased()) },
+            set: { isSelected in
+                if isSelected {
+                    selectedStatuses.insert(status.rawValue.lowercased())
+                } else {
+                    selectedStatuses.remove(status.rawValue.lowercased())
+                }
+            }
+        )
+    }
+
     // MARK: - Project Toolbar
     private func projectToolbar(viewModel: ProjectDetailViewModel) -> some View {
         HStack(spacing: TaskFlowSpacing.medium) {
@@ -682,11 +772,346 @@ struct CreateTaskView: View {
     }
 }
 
-// MARK: - Preview
-#Preview("Project Detail") {
-    let project = Project(name: "Website Redesign", projectDescription: "Redesign company website", color: "#4ECDC4", icon: "folder.fill")
-    NavigationStack {
-        ProjectDetailView(project: project)
+// MARK: - Enhanced Task List View
+struct EnhancedTaskListView: View {
+    @ObservedObject var viewModel: ProjectDetailViewModel
+    
+    // FIXED: Receive selectedStatuses as a Binding
+    @Binding var selectedStatuses: Set<String>
+    
+    @State private var sortBy: SortOption = .dueDate
+    @State private var sortOrder: SortOrder = .ascending
+    @State private var selectedTask: Task?
+    @State private var bulkSelectionState = BulkSelectionState()
+
+    enum SortOption: String, CaseIterable, Identifiable {
+        case dueDate = "Due Date"
+        case priority = "Priority"
+        case createdAt = "Created"
+        case title = "Title"
+        case status = "Status"
+
+        var id: String { rawValue }
+    }
+
+    enum SortOrder: String, CaseIterable, Identifiable {
+        case ascending = "Ascending"
+        case descending = "Descending"
+
+        var id: String { rawValue }
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: TaskFlowSpacing.small) {
+                // Sort Bar
+                sortBar
+
+                // Bulk Actions (if selection active)
+                if bulkSelectionState.showBulkActions {
+                    bulkActionsBar
+                }
+
+                // Task List
+                LazyVStack(spacing: TaskFlowSpacing.small) {
+                    ForEach(sortedTasks, id: \.id) { task in
+                        EnhancedTaskListRow(
+                            task: task,
+                            isSelected: bulkSelectionState.selectedTaskIds.contains(task.id),
+                            isSelectionMode: bulkSelectionState.isSelectionMode,
+                            onTap: {
+                                if bulkSelectionState.isSelectionMode {
+                                    bulkSelectionState.toggleSelection(for: task.id)
+                                } else {
+                                    selectedTask = task
+                                }
+                            },
+                            onLongPress: {
+                                bulkSelectionState.isSelectionMode = true
+                                bulkSelectionState.toggleSelection(for: task.id)
+                            }
+                        )
+                    }
+                }
+            }
+            .padding()
+        }
+        .background(TaskFlowColors.background)
+        .navigationDestination(item: $selectedTask) { task in
+            TaskDetailView(task: task)
+        }
+    }
+
+    private var sortBar: some View {
+        HStack {
+            // Sort Picker
+            Menu {
+                ForEach(SortOption.allCases) { option in
+                    Button {
+                        sortBy = option
+                    } label: {
+                        HStack {
+                            Text(option.rawValue)
+                            if sortBy == option {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+
+                Divider()
+
+                ForEach(SortOrder.allCases) { order in
+                    Button {
+                        sortOrder = order
+                    } label: {
+                        HStack {
+                            Text(order.rawValue)
+                            if sortOrder == order {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "arrow.up.arrow.down")
+                        .font(.system(size: 12))
+                    Text("\(sortBy.rawValue) (\(sortOrder.rawValue.prefix(1).uppercased()))")
+                        .font(.system(size: 12, weight: .medium))
+                }
+                .foregroundColor(TaskFlowColors.textPrimary)
+                .padding(.horizontal, TaskFlowSpacing.medium)
+                .padding(.vertical, TaskFlowSpacing.small)
+                .background(TaskFlowColors.surface)
+                .cornerRadius(TaskFlowRadius.small)
+                .overlay(
+                    RoundedRectangle(cornerRadius: TaskFlowRadius.small)
+                        .stroke(TaskFlowColors.border, lineWidth: 1)
+                )
+            }
+
+            Spacer()
+
+            // Selection Mode Toggle
+            Button(action: {
+                bulkSelectionState.toggleSelectionMode()
+            }) {
+                HStack(spacing: 4) {
+                    Image(systemName: bulkSelectionState.isSelectionMode ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 14))
+                        .foregroundColor(bulkSelectionState.isSelectionMode ? TaskFlowColors.primary : TaskFlowColors.textSecondary)
+                    Text("Select")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(bulkSelectionState.isSelectionMode ? TaskFlowColors.primary : TaskFlowColors.textSecondary)
+                }
+            }
+        }
+        .padding(.vertical, TaskFlowSpacing.small)
+    }
+
+    private var bulkActionsBar: some View {
+        HStack(spacing: TaskFlowSpacing.medium) {
+            Text("\(bulkSelectionState.selectedCount) selected")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(TaskFlowColors.textPrimary)
+
+            Spacer()
+
+            Button(action: {
+                bulkSelectionState.deselectAll()
+            }) {
+                Text("Cancel")
+                    .font(.system(size: 13))
+                    .foregroundColor(TaskFlowColors.textSecondary)
+            }
+
+            Button(action: {
+                // Delete selected
+            }) {
+                Image(systemName: "trash")
+                    .font(.system(size: 14))
+                    .foregroundColor(TaskFlowColors.error)
+            }
+
+            Button(action: {
+                // Move selected
+            }) {
+                Image(systemName: "folder")
+                    .font(.system(size: 14))
+                    .foregroundColor(TaskFlowColors.primary)
+            }
+        }
+        .padding(.horizontal, TaskFlowSpacing.medium)
+        .padding(.vertical, TaskFlowSpacing.small)
+        .background(TaskFlowColors.primary.opacity(0.1))
+        .cornerRadius(TaskFlowRadius.small)
+    }
+
+    private var sortedTasks: [Task] {
+        var tasks = viewModel.filteredTasks
+
+        // Apply filters
+        if !selectedStatuses.isEmpty {
+            tasks = tasks.filter { selectedStatuses.contains($0.status.lowercased()) }
+        }
+
+        // Sort
+        tasks.sort { task1, task2 in
+            switch sortBy {
+            case .dueDate:
+                let date1 = task1.dueDate ?? .distantFuture
+                let date2 = task2.dueDate ?? .distantFuture
+                return sortOrder == .ascending ? date1 < date2 : date1 > date2
+            case .priority:
+                let p1 = Task.Priority(rawValue: task1.priority)?.weight ?? 2
+                let p2 = Task.Priority(rawValue: task2.priority)?.weight ?? 2
+                return sortOrder == .ascending ? p1 < p2 : p1 > p2
+            case .createdAt:
+                return sortOrder == .ascending ? task1.createdAt < task2.createdAt : task1.createdAt > task2.createdAt
+            case .title:
+                return sortOrder == .ascending ? task1.title < task2.title : task1.title > task2.title
+            case .status:
+                return sortOrder == .ascending ? task1.status < task2.status : task1.status > task2.status
+            }
+        }
+
+        return tasks
     }
 }
 
+// MARK: - Enhanced Task List Row
+struct EnhancedTaskListRow: View {
+    let task: Task
+    let isSelected: Bool
+    let isSelectionMode: Bool
+    let onTap: () -> Void
+    let onLongPress: () -> Void
+
+    var body: some View {
+        HStack(spacing: TaskFlowSpacing.medium) {
+            // Selection Checkbox
+            if isSelectionMode {
+                Button(action: onTap) {
+                    Image(systemName: isSelected ? "checkmark.square.fill" : "square")
+                        .font(.system(size: 18))
+                        .foregroundColor(isSelected ? TaskFlowColors.primary : TaskFlowColors.textTertiary)
+                }
+            }
+
+            // Status Indicator
+            ZStack {
+                Circle()
+                    .fill(statusColor)
+                    .frame(width: 20, height: 20)
+
+                Image(systemName: statusIcon)
+                    .font(.system(size: 10))
+                    .foregroundColor(.white)
+            }
+
+            // Content
+            VStack(alignment: .leading, spacing: 4) {
+                Text(task.title)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(TaskFlowColors.textPrimary)
+                    .lineLimit(1)
+
+                HStack(spacing: TaskFlowSpacing.small) {
+                    TFPriorityBadge(priority: task.priority, size: .small, style: .outline)
+
+                    if let dueDate = task.dueDate {
+                        HStack(spacing: 4) {
+                            Image(systemName: "calendar")
+                                .font(.system(size: 10))
+                            Text(formatDueDate(dueDate))
+                                .font(.system(size: 11))
+                        }
+                        .foregroundColor(task.isOverdue ? TaskFlowColors.error : TaskFlowColors.textTertiary)
+                    }
+
+                    // Dependency indicator
+                    if task.isBlocked {
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 10))
+                            .foregroundColor(TaskFlowColors.warning)
+                    }
+                }
+            }
+
+            Spacer()
+
+            // Labels
+            if let labels = task.labels, !labels.isEmpty {
+                HStack(spacing: 4) {
+                    ForEach(labels.prefix(3), id: \.id) { taskLabel in
+                        if let label = taskLabel.label {
+                            Circle()
+                                .fill(Color(hex: label.color))
+                                .frame(width: 12, height: 12)
+                        }
+                    }
+                }
+            }
+
+            // Assignee
+            if let assignee = task.assignee {
+                TFAvatar(name: assignee.displayName, colorHex: assignee.avatarColor, size: .small)
+            }
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 14))
+                .foregroundColor(TaskFlowColors.textTertiary)
+        }
+        .padding(TaskFlowSpacing.medium)
+        .background(
+            RoundedRectangle(cornerRadius: TaskFlowRadius.medium)
+                .fill(isSelected ? TaskFlowColors.primary.opacity(0.1) : TaskFlowColors.surface)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: TaskFlowRadius.medium)
+                .stroke(isSelected ? TaskFlowColors.primary : TaskFlowColors.border, lineWidth: isSelected ? 2 : 1)
+        )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onTap()
+        }
+        .onLongPressGesture {
+            onLongPress()
+        }
+    }
+
+    private var statusColor: Color {
+        switch task.status.lowercased() {
+        case "todo": return TaskFlowColors.statusTodo
+        case "inprogress": return TaskFlowColors.statusInProgress
+        case "review": return TaskFlowColors.statusReview
+        case "done": return TaskFlowColors.statusDone
+        default: return TaskFlowColors.statusTodo
+        }
+    }
+
+    private var statusIcon: String {
+        switch task.status.lowercased() {
+        case "todo": return "circle"
+        case "inprogress": return "arrow.triangle.2.circlepath"
+        case "review": return "eye.fill"
+        case "done": return "checkmark"
+        default: return "circle"
+        }
+    }
+
+    private func formatDueDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        return formatter.string(from: date)
+    }
+}
+
+// MARK: - Preview
+#Preview("Project Detail") {
+    let project = Project(name: "Website Redesign", projectDescription: "Redesign company website", color: "#4ECDC4", icon: "folder.fill")
+    return NavigationStack {
+        ProjectDetailView(project: project)
+    }
+}

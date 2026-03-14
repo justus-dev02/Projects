@@ -27,13 +27,20 @@ struct ProjectsApp: App {
             ActivityLog.self,
             Label.self,
             NotificationModel.self,
-            SavedView.self
+            SavedView.self,
+            // New models for advanced features
+            TaskDependency.self,
+            RecurringTask.self,
+            CustomFieldDefinition.self,
+            CustomFieldValue.self,
+            TaskTemplate.self,
+            Invitation.self
         ])
 
         let modelConfiguration = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: false,
-            cloudKitDatabase: .none
+            cloudKitDatabase: .automatic
         )
 
         do {

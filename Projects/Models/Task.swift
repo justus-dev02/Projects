@@ -33,6 +33,20 @@ final class Task {
     @Relationship(deleteRule: .cascade) var labels: [TaskLabel]?
     @Relationship(deleteRule: .cascade) var activityLogs: [ActivityLog]?
     @Relationship(deleteRule: .nullify) var collaborators: [TaskCollaborator]?
+
+    // New Relationships for advanced features
+    @Relationship(deleteRule: .nullify) var dependencies: [TaskDependency]?
+    @Relationship(deleteRule: .nullify) var recurringTask: RecurringTask?
+    @Relationship(deleteRule: .cascade) var customFieldValues: [CustomFieldValue]?
+    @Relationship(deleteRule: .nullify) var template: TaskTemplate?
+    @Relationship(deleteRule: .nullify) var parentTask: Task?
+    @Relationship(deleteRule: .nullify) var blockedTasks: [Task]?
+
+    // Reminder settings
+    var reminderDate: Date?
+    var reminderEnabled: Bool = false
+    var isRecurring: Bool = false
+    var recurrenceRule: String?
     
     init(
         id: String = UUID().uuidString,
@@ -46,7 +60,9 @@ final class Task {
         estimatedHours: Double? = nil,
         actualHours: Double? = nil,
         createdAt: Date = Date(),
-        updatedAt: Date = Date()
+        updatedAt: Date = Date(),
+        reminderEnabled: Bool = false,
+        isRecurring: Bool = false
     ) {
         self.id = id
         self.title = title
@@ -60,6 +76,8 @@ final class Task {
         self.actualHours = actualHours
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.reminderEnabled = reminderEnabled
+        self.isRecurring = isRecurring
     }
 }
 
@@ -299,45 +317,105 @@ extension Task {
         guard let dueDate = dueDate else { return false }
         return !isCompleted && dueDate < Date()
     }
-    
+
     var isCompleted: Bool {
         status == "done"
     }
-    
+
     var isDueToday: Bool {
         guard let dueDate = dueDate else { return false }
         return Calendar.current.isDateInToday(dueDate)
     }
-    
+
     var isDueTomorrow: Bool {
         guard let dueDate = dueDate else { return false }
         return Calendar.current.isDateInTomorrow(dueDate)
     }
-    
+
     var daysUntilDue: Int? {
         guard let dueDate = dueDate else { return nil }
         return Calendar.current.dateComponents([.day], from: Date(), to: dueDate).day
     }
-    
+
     var subtaskProgress: Double {
         guard let subtasks = subtasks, !subtasks.isEmpty else { return 0 }
         let completed = subtasks.filter { $0.isCompleted }.count
         return Double(completed) / Double(subtasks.count)
     }
-    
+
     var commentCount: Int {
         comments?.count ?? 0
     }
-    
+
     var attachmentCount: Int {
         attachments?.count ?? 0
     }
-    
+
     var completedSubtaskCount: Int {
         subtasks?.filter { $0.isCompleted }.count ?? 0
     }
-    
+
     var totalSubtaskCount: Int {
         subtasks?.count ?? 0
+    }
+
+    // MARK: - New Computed Properties
+
+    var hasDependencies: Bool {
+        !(dependencies?.isEmpty ?? true)
+    }
+
+    var blockingTasks: [Task] {
+        dependencies?.compactMap { dep in
+            guard dep.isBlocking else { return nil }
+            return dep.predecessor
+        } ?? []
+    }
+
+    var blockedByCount: Int {
+        blockingTasks.count
+    }
+
+    var isBlocked: Bool {
+        blockingTasks.contains { !$0.isCompleted }
+    }
+
+    var canStart: Bool {
+        !isBlocked
+    }
+
+    var hasCustomFields: Bool {
+        !(customFieldValues?.isEmpty ?? true)
+    }
+
+    var hasReminder: Bool {
+        reminderEnabled && reminderDate != nil
+    }
+
+    var isReminderDue: Bool {
+        guard let reminderDate = reminderDate else { return false }
+        return reminderDate <= Date() && !isCompleted
+    }
+
+    var dependencyDescription: String {
+        if isBlocked {
+            return "Blocked by \(blockedByCount) task(s)"
+        } else if hasDependencies {
+            return "Has dependencies"
+        }
+        return "No dependencies"
+    }
+
+    var isFromTemplate: Bool {
+        template != nil
+    }
+
+    var hasRecurringPattern: Bool {
+        isRecurring && recurringTask != nil
+    }
+
+    var nextRecurringDate: Date? {
+        guard let recurring = recurringTask else { return nil }
+        return recurring.nextOccurrenceDate
     }
 }

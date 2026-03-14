@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftData
+import Combine
 
 @Model
 final class Project {
@@ -27,6 +28,12 @@ final class Project {
     @Relationship(deleteRule: .cascade) var boardColumns: [BoardColumn]?
     @Relationship(deleteRule: .nullify) var workspace: Workspace?
     @Relationship(deleteRule: .cascade) var members: [ProjectMember]?
+
+    // New relationships for advanced features
+    @Relationship(deleteRule: .cascade) var customFieldDefinitions: [CustomFieldDefinition]?
+    @Relationship(deleteRule: .cascade) var templates: [TaskTemplate]?
+    @Relationship(deleteRule: .cascade) var invitations: [Invitation]?
+    @Relationship(deleteRule: .cascade) var savedViews: [SavedView]?
     
     init(
         id: String = UUID().uuidString,

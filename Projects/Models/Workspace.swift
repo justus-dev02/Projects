@@ -24,6 +24,10 @@ final class Workspace {
     @Relationship(deleteRule: .nullify) var owner: User?
     @Relationship(deleteRule: .cascade) var members: [WorkspaceMember]?
     @Relationship(deleteRule: .cascade) var labels: [Label]?
+
+    // New relationships for advanced features
+    @Relationship(deleteRule: .cascade) var invitations: [Invitation]?
+    @Relationship(deleteRule: .cascade) var templates: [TaskTemplate]?
     
     init(
         id: String = UUID().uuidString,
