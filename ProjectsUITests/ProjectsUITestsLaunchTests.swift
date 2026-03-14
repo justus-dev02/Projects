@@ -2,32 +2,31 @@
 //  ProjectsUITestsLaunchTests.swift
 //  ProjectsUITests
 //
-//  Created by Justus on 12.03.26.
+//  TaskFlow - Launch Tests
 //
 
 import XCTest
 
 final class ProjectsUITestsLaunchTests: XCTestCase {
-
+    
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true
     }
-
+    
     override func setUpWithError() throws {
         continueAfterFailure = false
     }
-
-    @MainActor
+    
     func testLaunch() throws {
         let app = XCUIApplication()
         app.launch()
-
-        // Insert steps here to perform after app launch but before taking a screenshot,
-        // such as logging into a test account or navigating somewhere in the app
-
-        let attachment = XCTAttachment(screenshot: app.screenshot())
-        attachment.name = "Launch Screen"
-        attachment.lifetime = .keepAlways
-        add(attachment)
+        
+        // Insert steps here to perform after app launch
+        
+        // Take a snapshot of the app for the App Store preview
+        // snapshot("01-Launch")
+        
+        // Verify app launched successfully
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 10))
     }
 }

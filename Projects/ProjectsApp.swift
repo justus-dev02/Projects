@@ -2,7 +2,7 @@
 //  ProjectsApp.swift
 //  Projects
 //
-//  Created by Justus on 12.03.26.
+//  TaskFlow - Multi-Platform Task Management App
 //
 
 import SwiftUI
@@ -10,11 +10,33 @@ import SwiftData
 
 @main
 struct ProjectsApp: App {
+    @StateObject private var authService = AuthService.shared
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            User.self,
+            Workspace.self,
+            WorkspaceMember.self,
+            Project.self,
+            ProjectMember.self,
+            BoardColumn.self,
+            Task.self,
+            Subtask.self,
+            Comment.self,
+            Attachment.self,
+            TaskLabel.self,
+            TaskCollaborator.self,
+            ActivityLog.self,
+            Label.self,
+            NotificationModel.self,
+            SavedView.self
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+
+        let modelConfiguration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: false,
+            cloudKitDatabase: .none
+        )
 
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
@@ -25,8 +47,12 @@ struct ProjectsApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootContentView()
+                .environmentObject(authService)
+                .modelContainer(sharedModelContainer)
         }
-        .modelContainer(sharedModelContainer)
+#if os(macOS)
+        .frame(minWidth: 1000, minHeight: 700)
+#endif
     }
 }
