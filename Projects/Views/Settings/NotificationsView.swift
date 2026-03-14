@@ -14,15 +14,16 @@ import Combine
 class NotificationsViewModel: ObservableObject {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \NotificationModel.createdAt, order: .reverse) private var notifications: [NotificationModel]
-    
+
     @Published var filteredNotifications: [NotificationModel] = []
     @Published var showingUnreadOnly = false
     @Published var isLoading = false
-    
+
     private let authService: AuthService
 
-    init(authService: AuthService? = nil) {
-        self.authService = authService ?? AuthService.shared
+    init(modelContext: ModelContext? = nil, authService: AuthService? = nil) {
+        let context = modelContext ?? DataService().modelContext
+        self.authService = authService ?? AuthService(modelContext: context)
     }
     
     func loadNotifications() {
@@ -74,7 +75,9 @@ struct NotificationsView: View {
                 }
             }
             .navigationTitle("Notifications")
+#if os(iOS)
             .navigationBarTitleDisplayMode(.large)
+#endif
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
@@ -143,9 +146,13 @@ struct NotificationsView: View {
                 }
             }
         }
+#if os(iOS)
         .listStyle(.insetGrouped)
+#elseif os(macOS)
+        .listStyle(.inset)
+#endif
     }
-    
+
     // MARK: - Empty State
     private var emptyState: some View {
         TFEmptyStateCard(

@@ -12,31 +12,31 @@ import Combine
 // MARK: - Dashboard View Model
 @MainActor
 class DashboardViewModel: ObservableObject {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var workspaces: [Workspace]
-    
     @Published var stats: DashboardStats?
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var selectedWorkspaceId: String?
-    
+
     private let dashboardService: DashboardService
     private let authService: AuthService
     private let dataService: DataService
+    private var modelContext: ModelContext
 
     init(
+        modelContext: ModelContext,
         dataService: DataService? = nil,
         dashboardService: DashboardService? = nil,
         authService: AuthService? = nil
     ) {
-        self.dataService = dataService ?? DataService.shared
+        self.modelContext = modelContext
+        self.dataService = dataService ?? DataService(modelContext: modelContext)
         self.dashboardService = dashboardService ?? DashboardService(dataService: self.dataService)
-        self.authService = authService ?? AuthService.shared
+        self.authService = authService ?? AuthService(modelContext: modelContext)
     }
-    
+
     func loadStats() {
         isLoading = true
-        
+
         do {
             let userId = authService.currentUser?.id
             stats = try dashboardService.getDashboardStats(for: userId)
@@ -44,13 +44,13 @@ class DashboardViewModel: ObservableObject {
         } catch {
             errorMessage = error.localizedDescription
         }
-        
+
         isLoading = false
     }
-    
+
     func loadStatsForWorkspace(_ workspaceId: String) {
         isLoading = true
-        
+
         do {
             stats = try dashboardService.getWorkspaceDashboardStats(workspaceId: workspaceId)
             selectedWorkspaceId = workspaceId
@@ -58,42 +58,84 @@ class DashboardViewModel: ObservableObject {
         } catch {
             errorMessage = error.localizedDescription
         }
-        
+
         isLoading = false
     }
 }
 
 // MARK: - Dashboard View
 struct DashboardView: View {
-    @StateObject private var viewModel = DashboardViewModel()
+    @Environment(\.modelContext) private var modelContext
+    @State private var viewModel: DashboardViewModel?
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
-    
+
+    @State private var showingCreateWorkspace = false
+    @State private var showingSettings = false
+    @State private var createdWorkspace: Workspace?
+    @State private var selectedWorkspace: Workspace?
+
+    @Query(sort: \Workspace.createdAt) private var workspaces: [Workspace]
+
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: TaskFlowSpacing.xLarge) {
-                // Header
-                dashboardHeader
-                
-                // Stats Grid
-                statsGrid
-                
-                // Task Lists
-                taskListsSection
-                
-                // Workspace Overview
-                workspaceOverviewSection
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: TaskFlowSpacing.xLarge) {
+                    // Header
+                    dashboardHeader
+
+                    // Stats Grid
+                    statsGrid
+
+                    // Task Lists
+                    taskListsSection
+
+                    // All Workspaces Section
+                    allWorkspacesSection
+                }
+                .padding()
             }
-            .padding()
-        }
-        .background(TaskFlowColors.background)
-        .navigationTitle("Dashboard")
-        .navigationBarTitleDisplayMode(.large)
-        .task {
-            viewModel.loadStats()
-        }
-        .refreshable {
-            viewModel.loadStats()
+            .background(TaskFlowColors.background)
+            .navigationTitle("Dashboard")
+#if os(iOS)
+            .navigationBarTitleDisplayMode(.large)
+#endif
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button(action: {
+                        showingSettings = true
+                    }) {
+                        Image(systemName: "gearshape.fill")
+                            .foregroundColor(TaskFlowColors.textPrimary)
+                    }
+                }
+            }
+            .task {
+                // Initialize viewModel with modelContext
+                if viewModel == nil {
+                    viewModel = DashboardViewModel(modelContext: modelContext)
+                }
+                viewModel?.loadStats()
+            }
+#if os(iOS)
+            .refreshable {
+                viewModel?.loadStats()
+            }
+#endif
+            .sheet(isPresented: $showingCreateWorkspace) {
+                CreateWorkspaceView { workspace in
+                    createdWorkspace = workspace
+                    showingCreateWorkspace = false
+                    // Reload dashboard stats
+                    viewModel?.loadStats()
+                }
+            }
+            .sheet(isPresented: $showingSettings) {
+                SettingsView()
+            }
+            .navigationDestination(item: $selectedWorkspace) { workspace in
+                WorkspaceDetailView(workspace: workspace)
+            }
         }
     }
     
@@ -139,30 +181,30 @@ struct DashboardView: View {
         Group {
             TFStatCard(
                 title: "Total Tasks",
-                value: "\(viewModel.stats?.totalTasks ?? 0)",
+                value: "\(viewModel?.stats?.totalTasks ?? 0)",
                 icon: "checkmark.circle.fill",
                 iconColor: TaskFlowColors.primary
             )
-            
+
             TFStatCard(
                 title: "Completed",
-                value: "\(viewModel.stats?.completedTasks ?? 0)",
+                value: "\(viewModel?.stats?.completedTasks ?? 0)",
                 icon: "checkmark.seal.fill",
                 iconColor: TaskFlowColors.success,
-                trend: viewModel.stats?.taskCompletionRate,
+                trend: viewModel?.stats?.taskCompletionRate,
                 trendUp: true
             )
-            
+
             TFStatCard(
                 title: "In Progress",
-                value: "\(viewModel.stats?.inProgressTasks ?? 0)",
+                value: "\(viewModel?.stats?.inProgressTasks ?? 0)",
                 icon: "arrow.triangle.2.circlepath",
                 iconColor: TaskFlowColors.statusInProgress
             )
-            
+
             TFStatCard(
                 title: "Overdue",
-                value: "\(viewModel.stats?.overdueTasks ?? 0)",
+                value: "\(viewModel?.stats?.overdueTasks ?? 0)",
                 icon: "exclamationmark.triangle.fill",
                 iconColor: TaskFlowColors.error
             )
@@ -192,7 +234,7 @@ struct DashboardView: View {
                             Spacer()
                         }
                         
-                        if let dueToday = viewModel.stats?.dueToday, !dueToday.isEmpty {
+                        if let dueToday = viewModel?.stats?.dueToday, !dueToday.isEmpty {
                             VStack(spacing: TaskFlowSpacing.small) {
                                 ForEach(dueToday.prefix(4), id: \.id) { task in
                                     TaskListItemView(task: task)
@@ -208,7 +250,7 @@ struct DashboardView: View {
                         }
                     }
                 }
-                
+
                 // High Priority
                 TFCard {
                     VStack(alignment: .leading, spacing: TaskFlowSpacing.medium) {
@@ -220,8 +262,8 @@ struct DashboardView: View {
                                 .foregroundColor(TaskFlowColors.textPrimary)
                             Spacer()
                         }
-                        
-                        if let highPriority = viewModel.stats?.highPriority, !highPriority.isEmpty {
+
+                        if let highPriority = viewModel?.stats?.highPriority, !highPriority.isEmpty {
                             VStack(spacing: TaskFlowSpacing.small) {
                                 ForEach(highPriority.prefix(4), id: \.id) { task in
                                     TaskListItemView(task: task)
@@ -240,31 +282,47 @@ struct DashboardView: View {
             }
         }
     }
-    
-    // MARK: - Workspace Overview Section
-    private var workspaceOverviewSection: some View {
+
+    // MARK: - All Workspaces Section
+    private var allWorkspacesSection: some View {
         VStack(alignment: .leading, spacing: TaskFlowSpacing.large) {
-            Text("Workspaces")
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundColor(TaskFlowColors.textPrimary)
-            
-            if let workspaceStats = viewModel.stats?.workspaceStats, !workspaceStats.isEmpty {
-                LazyVGrid(columns: [
-                    GridItem(.flexible()),
-                    GridItem(.flexible())
-                ], spacing: TaskFlowSpacing.large) {
-                    ForEach(workspaceStats, id: \.workspaceId) { ws in
-                        WorkspaceOverviewCard(workspace: ws)
-                    }
+            HStack {
+                Text("My Workspaces")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundColor(TaskFlowColors.textPrimary)
+
+                Spacer()
+
+                Button(action: {
+                    showingCreateWorkspace = true
+                }) {
+                    Image(systemName: "plus.circle.fill")
+                        .foregroundColor(TaskFlowColors.primary)
                 }
-            } else {
+            }
+
+            if workspaces.isEmpty {
                 TFEmptyStateCard(
                     icon: "briefcase",
                     title: "No Workspaces",
                     message: "Create your first workspace to get started.",
                     actionTitle: "Create Workspace",
-                    action: {}
+                    action: {
+                        showingCreateWorkspace = true
+                    }
                 )
+            } else {
+                LazyVGrid(columns: [
+                    GridItem(.flexible()),
+                    GridItem(.flexible())
+                ], spacing: TaskFlowSpacing.large) {
+                    ForEach(workspaces.filter { !$0.isArchived }, id: \.id) { workspace in
+                        WorkspaceCard(workspace: workspace)
+                            .onTapGesture {
+                                selectedWorkspace = workspace
+                            }
+                    }
+                }
             }
         }
     }
@@ -399,16 +457,100 @@ struct StatItem: View {
     let value: String
     let label: String
     let color: Color
-    
+
     var body: some View {
         VStack(spacing: 2) {
             Text(value)
                 .font(.system(size: 18, weight: .bold))
                 .foregroundColor(color)
-            
+
             Text(label)
                 .font(.system(size: 11))
                 .foregroundColor(TaskFlowColors.textTertiary)
+        }
+    }
+}
+
+// MARK: - Workspace Card
+struct WorkspaceCard: View {
+    let workspace: Workspace
+
+    var body: some View {
+        TFCard {
+            VStack(alignment: .leading, spacing: TaskFlowSpacing.medium) {
+                // Header
+                HStack {
+                    ZStack {
+                        Circle()
+                            .fill(Color(hex: workspace.color).opacity(0.15))
+                            .frame(width: 48, height: 48)
+
+                        Image(systemName: workspace.icon)
+                            .font(.system(size: 20))
+                            .foregroundColor(Color(hex: workspace.color))
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(workspace.name)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(TaskFlowColors.textPrimary)
+                            .lineLimit(1)
+
+                        if let workspaceDescription = workspace.workspaceDescription {
+                            Text(workspaceDescription)
+                                .font(.system(size: 12))
+                                .foregroundColor(TaskFlowColors.textSecondary)
+                                .lineLimit(1)
+                        }
+                    }
+
+                    Spacer()
+                }
+
+                Divider()
+
+                // Stats
+                HStack(spacing: TaskFlowSpacing.large) {
+                    WorkspaceStatItem(
+                        value: "\(workspace.projectCount)",
+                        label: "Projects",
+                        icon: "folder.fill"
+                    )
+
+                    WorkspaceStatItem(
+                        value: "\(workspace.memberCount)",
+                        label: "Members",
+                        icon: "person.2.fill"
+                    )
+
+                    Spacer()
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Workspace Stat Item
+struct WorkspaceStatItem: View {
+    let value: String
+    let label: String
+    let icon: String
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.system(size: 10))
+                .foregroundColor(TaskFlowColors.textTertiary)
+
+            VStack(alignment: .leading, spacing: -2) {
+                Text(value)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(TaskFlowColors.textPrimary)
+
+                Text(label)
+                    .font(.system(size: 9))
+                    .foregroundColor(TaskFlowColors.textTertiary)
+            }
         }
     }
 }

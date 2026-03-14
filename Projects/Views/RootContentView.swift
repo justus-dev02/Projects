@@ -4,28 +4,37 @@
 //
 //  TaskFlow - Main Root Content View with Sidebar Navigation
 //
-
+/*
 import SwiftUI
 import SwiftData
 import Combine
 
 // MARK: - Root Content View
 struct RootContentView: View {
+    @Environment(\.modelContext) private var modelContext
     @StateObject private var authViewModel = AuthViewModel()
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    init() {
+        // AuthViewModel will be initialized with environment's modelContext in onAppear
+        _authViewModel = StateObject(wrappedValue: AuthViewModel())
+    }
 
     var body: some View {
         Group {
             switch authViewModel.authState {
             case .unknown:
                 LoadingView()
-            case .unauthenticated:
-                OnboardingView(onComplete: {
-                    authViewModel.loginLocally()
-                })
             case .authenticated:
                 mainAppView
+            case .unauthenticated:
+                // This should not happen anymore - auto login is performed
+                LoadingView()
             }
+        }
+        .task {
+            // Initialize auth state once modelContext is available
+            authViewModel.initialize(with: modelContext)
         }
     }
 
@@ -52,15 +61,26 @@ struct RootContentView: View {
 class AuthViewModel: ObservableObject {
     @Published var authState: AuthState = .unknown
 
-    private let authService: AuthService
+    private var authService: AuthService?
     private var cancellables = Set<AnyCancellable>()
 
-    init(authService: AuthService? = nil) {
-        self.authService = authService ?? AuthService.shared
+    init() {
+        // AuthService will be created when initialize(with:) is called
+    }
+
+    /// Initialize the auth view model with the model context from the environment
+    func initialize(with modelContext: ModelContext) {
+        guard authService == nil else { return } // Already initialized
+
+        let authService = AuthService(modelContext: modelContext)
+        self.authService = authService
+
+        // Initialize auth state after ModelContainer is ready
+        authService.initializeAuthState()
 
         // Observe auth state changes
-        self.authService.authStatePublisher
-            .receive(on: RunLoop.main)
+        authService.authStatePublisher
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
                 self?.authState = state
             }
@@ -68,11 +88,11 @@ class AuthViewModel: ObservableObject {
     }
 
     func loginLocally() {
-        _ = try? authService.loginLocally()
+        _ = try? authService?.loginLocally()
     }
 
     func logout() {
-        _ = try? authService.logout()
+        _ = try? authService?.logout()
     }
 }
 
@@ -143,7 +163,7 @@ struct OnboardingView: View {
                         .tag(index)
                 }
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
+            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
             
             // Page Indicator
             HStack(spacing: TaskFlowSpacing.small) {
@@ -389,7 +409,9 @@ struct MyTasksView: View {
         }
         .background(TaskFlowColors.background)
         .navigationTitle("My Tasks")
+#if os(iOS)
         .navigationBarTitleDisplayMode(.large)
+#endif
         .sheet(item: $selectedTask) { task in
             TaskDetailView(task: task)
         }
@@ -452,3 +474,4 @@ struct TaskStatusSection: View {
 #Preview("My Tasks") {
     MyTasksView()
 }
+*/

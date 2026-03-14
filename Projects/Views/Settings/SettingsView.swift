@@ -15,16 +15,18 @@ class SettingsViewModel: ObservableObject {
     @Published var user: User?
     @Published var showingLogoutAlert = false
     @Published var showingDeleteAccountAlert = false
-    
+
     private let authService: AuthService
     private let dataService: DataService
 
     init(
+        modelContext: ModelContext? = nil,
         authService: AuthService? = nil,
         dataService: DataService? = nil
     ) {
-        self.authService = authService ?? AuthService.shared
-        self.dataService = dataService ?? DataService.shared
+        let context = modelContext ?? DataService().modelContext
+        self.authService = authService ?? AuthService(modelContext: context)
+        self.dataService = dataService ?? DataService(modelContext: context)
         self.user = self.authService.currentUser
     }
     
@@ -49,75 +51,102 @@ class SettingsViewModel: ObservableObject {
     }
 }
 
-// MARK: - Settings View
+// MARK: - Settings View (Lade-Logik)
 struct SettingsView: View {
-    @StateObject private var viewModel = SettingsViewModel()
-    @Environment(\.dismiss) private var dismiss
-    
+    @Environment(\.modelContext) private var modelContext
+    @State private var viewModel: SettingsViewModel?
+
     var body: some View {
         NavigationStack {
-            Form {
-                // Profile Section
-                Section {
-                    profileSection
-                } header: {
-                    Text("Profile")
-                }
-                
-                // Preferences Section
-                Section {
-                    appearanceSection
-                    notificationsSection
-                } header: {
-                    Text("Preferences")
-                }
-                
-                // Data Section
-                Section {
-                    dataSection
-                } header: {
-                    Text("Data")
-                }
-                
-                // About Section
-                Section {
-                    aboutSection
-                } header: {
-                    Text("About")
-                }
-                
-                // Danger Zone
-                Section {
-                    dangerZone
-                } header: {
-                    Text("Danger Zone")
+            Group {
+                if let vm = viewModel {
+                    // Sobald das ViewModel da ist, rufen wir die eigentliche Form auf
+                    SettingsFormView(viewModel: vm)
+                } else {
+                    ProgressView("Lade Einstellungen...")
                 }
             }
-            .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
+            .task {
+                if viewModel == nil {
+                    viewModel = SettingsViewModel(modelContext: modelContext)
                 }
             }
-            .alert("Logout", isPresented: $viewModel.showingLogoutAlert) {
-                Button("Cancel", role: .cancel) {}
-                Button("Logout", role: .destructive) {
-                    viewModel.logout()
-                }
-            } message: {
-                Text("Are you sure you want to logout?")
+        }
+    }
+}
+
+// MARK: - Settings Form View (Eigentliche UI)
+struct SettingsFormView: View {
+    @Environment(\.dismiss) private var dismiss
+    
+    // Hier ist es KEIN Optional mehr! Bindings ($) funktionieren hier nativ.
+    @ObservedObject var viewModel: SettingsViewModel
+    
+    var body: some View {
+        Form {
+            // Profile Section
+            Section {
+                profileSection
+            } header: {
+                Text("Profile")
             }
-            .alert("Delete Account", isPresented: $viewModel.showingDeleteAccountAlert) {
-                Button("Cancel", role: .cancel) {}
-                Button("Delete", role: .destructive) {
-                    try? viewModel.deleteAccount()
-                }
-            } message: {
-                Text("This action cannot be undone. All your data will be permanently deleted.")
+
+            // Preferences Section
+            Section {
+                appearanceSection
+                notificationsSection
+            } header: {
+                Text("Preferences")
             }
+
+            // Data Section
+            Section {
+                dataSection
+            } header: {
+                Text("Data")
+            }
+
+            // About Section
+            Section {
+                aboutSection
+            } header: {
+                Text("About")
+            }
+
+            // Danger Zone
+            Section {
+                dangerZone
+            } header: {
+                Text("Danger Zone")
+            }
+        }
+        .navigationTitle("Settings")
+#if os(iOS)
+        .navigationBarTitleDisplayMode(.large)
+#endif
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Done") {
+                    dismiss()
+                }
+            }
+        }
+        // Alerts zentral an die Form gehängt
+        .alert("Logout", isPresented: $viewModel.showingLogoutAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Logout", role: .destructive) {
+                viewModel.logout()
+            }
+        } message: {
+            Text("Are you sure you want to logout?")
+        }
+        .alert("Delete Account", isPresented: $viewModel.showingDeleteAccountAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                try? viewModel.deleteAccount()
+            }
+        } message: {
+            Text("Are you sure you want to delete your account? This action cannot be undone.")
         }
     }
     
@@ -126,20 +155,20 @@ struct SettingsView: View {
         VStack(spacing: TaskFlowSpacing.large) {
             if let user = viewModel.user {
                 TFUserAvatar(user: user, size: .xLarge)
-                
+
                 VStack(spacing: TaskFlowSpacing.xs) {
                     Text(user.displayName)
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(TaskFlowColors.textPrimary)
-                    
+
                     Text(user.email)
                         .font(.system(size: 13))
                         .foregroundColor(TaskFlowColors.textTertiary)
-                    
+
                     TFStatusBadge(status: user.role, size: .small)
                 }
             }
-            
+
             TFTextField(
                 title: "Display Name",
                 text: .init(
@@ -147,7 +176,7 @@ struct SettingsView: View {
                     set: { try? viewModel.updateDisplayName($0) }
                 )
             )
-            
+
             TFColorPicker(
                 title: "Avatar Color",
                 selectedColor: .init(

@@ -13,8 +13,8 @@ import Combine
 @MainActor
 class ProjectDetailViewModel: ObservableObject {
     let project: Project
-    @Environment(\.modelContext) private var modelContext
-    
+    private let modelContext: ModelContext
+
     @Published var columns: [BoardColumn] = []
     @Published var tasks: [Task] = []
     @Published var stats: ProjectStats?
@@ -24,19 +24,21 @@ class ProjectDetailViewModel: ObservableObject {
     @Published var showingCreateTask = false
     @Published var searchText = ""
     @Published var selectedViewType: ViewType = .board
-    
+
     private let projectRepo: ProjectRepository
     private let taskRepo: TaskRepository
     private let dataService: DataService
 
     init(
         project: Project,
+        modelContext: ModelContext,
         dataService: DataService? = nil,
         projectRepo: ProjectRepository? = nil,
         taskRepo: TaskRepository? = nil
     ) {
         self.project = project
-        self.dataService = dataService ?? DataService.shared
+        self.modelContext = modelContext
+        self.dataService = dataService ?? DataService(modelContext: modelContext)
         self.projectRepo = projectRepo ?? ProjectRepository(dataService: self.dataService)
         self.taskRepo = taskRepo ?? TaskRepository(dataService: self.dataService)
     }
@@ -134,55 +136,81 @@ enum ViewType: String, CaseIterable, Identifiable {
 
 // MARK: - Project Detail View
 struct ProjectDetailView: View {
-    @StateObject private var viewModel: ProjectDetailViewModel
+    @Environment(\.modelContext) private var modelContext
+    @State private var viewModel: ProjectDetailViewModel?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    
-    init(project: Project) {
-        _viewModel = StateObject(wrappedValue: ProjectDetailViewModel(project: project))
-    }
-    
+
+    let project: Project
+
+    @State private var searchText = ""
+    @State private var showingCreateTask = false
+    @State private var selectedTask: Task? = nil
+    @State private var selectedViewType: ViewType = .board
+
     var body: some View {
+        Group {
+            if let vm = viewModel {
+                projectContent(viewModel: vm)
+            } else {
+                ProgressView()
+            }
+        }
+        .task {
+            if viewModel == nil {
+                viewModel = ProjectDetailViewModel(
+                    project: project,
+                    modelContext: modelContext
+                )
+                viewModel?.loadData()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func projectContent(viewModel: ProjectDetailViewModel) -> some View {
         VStack(spacing: 0) {
             // Toolbar
-            projectToolbar
-            
+            projectToolbar(viewModel: viewModel)
+
             // Content
             Group {
-                switch viewModel.selectedViewType {
+                switch selectedViewType {
                 case .board:
-                    kanbanBoard
+                    kanbanBoard(viewModel: viewModel)
                 case .list:
-                    taskListView
+                    taskListView(viewModel: viewModel)
                 }
             }
         }
         .navigationTitle(viewModel.project.name)
+#if os(iOS)
         .navigationBarTitleDisplayMode(.large)
-        .searchable(text: $viewModel.searchText, prompt: "Search tasks")
+#endif
+        .searchable(text: $searchText, prompt: "Search tasks")
+        .onChange(of: searchText) {
+            viewModel.searchText = searchText
+        }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 TFButton(title: "New Task", style: .primary, size: .small, icon: "plus") {
-                    viewModel.showingCreateTask = true
+                    showingCreateTask = true
                 }
             }
         }
-        .task {
-            viewModel.loadData()
-        }
-        .sheet(isPresented: $viewModel.showingCreateTask) {
+        .sheet(isPresented: $showingCreateTask) {
             CreateTaskView(viewModel: viewModel)
         }
-        .sheet(item: $viewModel.selectedTask) { task in
+        .navigationDestination(item: $selectedTask) { task in
             TaskDetailView(task: task)
         }
     }
     
     // MARK: - Project Toolbar
-    private var projectToolbar: some View {
+    private func projectToolbar(viewModel: ProjectDetailViewModel) -> some View {
         HStack(spacing: TaskFlowSpacing.medium) {
             // View Type Picker
-            Picker("View", selection: $viewModel.selectedViewType) {
+            Picker("View", selection: $selectedViewType) {
                 ForEach(ViewType.allCases) { viewType in
                     SwiftUI.Label(viewType.rawValue, systemImage: viewType.icon)
                         .tag(viewType)
@@ -190,9 +218,12 @@ struct ProjectDetailView: View {
             }
             .pickerStyle(.segmented)
             .frame(maxWidth: 200)
-            
+            .onChange(of: selectedViewType) {
+                viewModel.selectedViewType = selectedViewType
+            }
+
             Spacer()
-            
+
             // Project Stats
             if let stats = viewModel.stats {
                 HStack(spacing: TaskFlowSpacing.large) {
@@ -219,9 +250,9 @@ struct ProjectDetailView: View {
             alignment: .bottom
         )
     }
-    
+
     // MARK: - Kanban Board
-    private var kanbanBoard: some View {
+    private func kanbanBoard(viewModel: ProjectDetailViewModel) -> some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(alignment: .top, spacing: TaskFlowSpacing.large) {
                 ForEach(viewModel.columns, id: \.id) { column in
@@ -236,9 +267,9 @@ struct ProjectDetailView: View {
         }
         .background(TaskFlowColors.background)
     }
-    
+
     // MARK: - Task List View
-    private var taskListView: some View {
+    private func taskListView(viewModel: ProjectDetailViewModel) -> some View {
         ScrollView {
             LazyVStack(spacing: TaskFlowSpacing.small) {
                 ForEach(viewModel.filteredTasks.sorted { $0.createdAt > $1.createdAt }, id: \.id) { task in
@@ -604,7 +635,9 @@ struct CreateTaskView: View {
                 }
             }
             .navigationTitle("New Task")
+#if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+#endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {

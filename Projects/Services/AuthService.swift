@@ -46,50 +46,105 @@ protocol AuthServiceProtocol {
 @MainActor
 final class AuthService: AuthServiceProtocol, ObservableObject {
     static let shared = AuthService()
-    
-    private let dataService: DataService
+
+    private var dataService: DataService
     private let userDefaults: UserDefaults
-    
+
     @Published private(set) var currentUser: User?
     @Published private(set) var authState: AuthState = .unknown
-    
+
     private let authStateSubject = PassthroughSubject<AuthState, Never>()
     var authStatePublisher: AnyPublisher<AuthState, Never> {
         authStateSubject.eraseToAnyPublisher()
     }
-    
-    private let userRepo: UserRepository
+
+    private var userRepo: UserRepository
 
     init(
         dataService: DataService? = nil,
         userDefaults: UserDefaults = .standard
     ) {
-        self.dataService = dataService ?? DataService.shared
+        // Use provided dataService or create one that will use the environment's ModelContext
+        self.dataService = dataService ?? DataService()
         self.userDefaults = userDefaults
         self.userRepo = UserRepository(dataService: self.dataService)
 
-        // Check for existing session
+        // Don't check session during init - wait for explicit call
+        // This prevents database access before ModelContainer is ready
+        currentUser = nil
+        authState = .unknown
+    }
+
+    /// Initialize with a specific ModelContext from the environment
+    init(modelContext: ModelContext?, userDefaults: UserDefaults = .standard) {
+        if let context = modelContext {
+            self.dataService = DataService(modelContext: context)
+        } else {
+            self.dataService = DataService()
+        }
+        self.userDefaults = userDefaults
+        self.userRepo = UserRepository(dataService: self.dataService)
+
+        currentUser = nil
+        authState = .unknown
+    }
+
+    /// Call this after ModelContainer is ready
+    func initializeAuthState() {
         checkExistingSession()
     }
     
     // MARK: - Session Management
     private func checkExistingSession() {
         guard let userId = userDefaults.string(forKey: "currentUserId") else {
-            authState = .unauthenticated
+            // No stored session - auto login locally
+            autoLoginLocally()
             return
         }
-        
+
         do {
             if let user = try userRepo.getById(userId) {
                 currentUser = user
                 authState = .authenticated(user)
                 authStateSubject.send(authState)
             } else {
-                authState = .unauthenticated
+                // User not found in DB - auto login locally
+                autoLoginLocally()
             }
         } catch {
-            authState = .unauthenticated
+            // Database error - auto login locally
+            autoLoginLocally()
         }
+    }
+
+    /// Automatically login with a local user account
+    private func autoLoginLocally() {
+        // Check if local user exists
+        let predicate = #Predicate<User> { $0.isLocalUser == true }
+
+        if let existingUser = try? dataService.fetchOne(User.self, predicate: predicate) {
+            currentUser = existingUser
+            authState = .authenticated(existingUser)
+            authStateSubject.send(authState)
+            saveSession(userId: existingUser.id)
+            return
+        }
+
+        // Create local user
+        let localUser = User(
+            email: "local@taskflow.dev",
+            displayName: "Local User",
+            role: "owner",
+            isLocalUser: true
+        )
+
+        dataService.insert(localUser)
+        try? dataService.save()
+
+        currentUser = localUser
+        authState = .authenticated(localUser)
+        authStateSubject.send(authState)
+        saveSession(userId: localUser.id)
     }
     
     private func saveSession(userId: String) {
@@ -102,34 +157,14 @@ final class AuthService: AuthServiceProtocol, ObservableObject {
     
     // MARK: - Local Login (No Password)
     func loginLocally() throws -> User {
-        // Check if local user exists
-        let predicate = #Predicate<User> { $0.isLocalUser == true }
-        
-        if let existingUser = try? dataService.fetchOne(User.self, predicate: predicate) {
-            currentUser = existingUser
-            authState = .authenticated(existingUser)
-            authStateSubject.send(authState)
-            saveSession(userId: existingUser.id)
-            return existingUser
+        // Use auto login logic
+        autoLoginLocally()
+
+        guard let user = currentUser else {
+            throw AuthError.notAuthenticated
         }
-        
-        // Create local user
-        let localUser = User(
-            email: "local@taskflow.dev",
-            displayName: "Local User",
-            role: "owner",
-            isLocalUser: true
-        )
-        
-        dataService.insert(localUser)
-        try dataService.save()
-        
-        currentUser = localUser
-        authState = .authenticated(localUser)
-        authStateSubject.send(authState)
-        saveSession(userId: localUser.id)
-        
-        return localUser
+
+        return user
     }
     
     // MARK: - Register

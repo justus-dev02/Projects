@@ -13,8 +13,8 @@ import Combine
 @MainActor
 class TaskDetailViewModel: ObservableObject {
     let task: Task
-    @Environment(\.modelContext) private var modelContext
-    
+    private let modelContext: ModelContext
+
     @Published var subtasks: [Subtask] = []
     @Published var comments: [Comment] = []
     @Published var labels: [TaskLabel] = []
@@ -23,17 +23,19 @@ class TaskDetailViewModel: ObservableObject {
     @Published var showingEditSheet = false
     @Published var newCommentText = ""
     @Published var newSubtaskText = ""
-    
+
     private let taskRepo: TaskRepository
     private let dataService: DataService
 
     init(
         task: Task,
+        modelContext: ModelContext,
         dataService: DataService? = nil,
         taskRepo: TaskRepository? = nil
     ) {
         self.task = task
-        self.dataService = dataService ?? DataService.shared
+        self.modelContext = modelContext
+        self.dataService = dataService ?? DataService(modelContext: modelContext)
         self.taskRepo = taskRepo ?? TaskRepository(dataService: self.dataService)
         loadDetails()
     }
@@ -118,31 +120,49 @@ class TaskDetailViewModel: ObservableObject {
 
 // MARK: - Task Detail View
 struct TaskDetailView: View {
-    @StateObject private var viewModel: TaskDetailViewModel
+    @Environment(\.modelContext) private var modelContext
+    @State private var viewModel: TaskDetailViewModel?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    
-    init(task: Task, viewModel: ProjectDetailViewModel? = nil) {
-        _viewModel = StateObject(wrappedValue: TaskDetailViewModel(task: task))
-    }
-    
+
+    let task: Task
+
     var body: some View {
+        Group {
+            if let vm = viewModel {
+                taskContent(viewModel: vm)
+            } else {
+                ProgressView()
+            }
+        }
+        .task {
+            if viewModel == nil {
+                viewModel = TaskDetailViewModel(
+                    task: task,
+                    modelContext: modelContext
+                )
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func taskContent(viewModel: TaskDetailViewModel) -> some View {
         Group {
             if horizontalSizeClass == .regular {
                 // iPad/Mac - Side by side
                 HStack(spacing: 0) {
                     // Main Content
-                    mainContent
-                    
+                    mainContent(viewModel: viewModel)
+
                     // Sidebar
-                    sidebar
+                    sidebar(viewModel: viewModel)
                         .frame(width: 300)
                         .border(TaskFlowColors.border, width: 1)
                 }
             } else {
                 // iPhone - Stacked
                 NavigationStack {
-                    mainContent
+                    mainContent(viewModel: viewModel)
                 }
             }
         }
@@ -150,58 +170,58 @@ struct TaskDetailView: View {
     }
     
     // MARK: - Main Content
-    private var mainContent: some View {
+    private func mainContent(viewModel: TaskDetailViewModel) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: TaskFlowSpacing.xLarge) {
                 // Header
-                taskHeader
+                taskHeader(viewModel: viewModel)
 
                 // Description
                 if viewModel.task.taskDescription != nil {
-                    descriptionSection
+                    descriptionSection(viewModel: viewModel)
                 }
 
                 // Subtasks
-                subtasksSection
+                subtasksSection(viewModel: viewModel)
 
                 // Comments
-                commentsSection
+                commentsSection(viewModel: viewModel)
             }
             .padding()
         }
     }
-    
+
     // MARK: - Sidebar
-    private var sidebar: some View {
+    private func sidebar(viewModel: TaskDetailViewModel) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: TaskFlowSpacing.xLarge) {
                 // Actions
-                actionsSection
-                
+                actionsSection(viewModel: viewModel)
+
                 // Details
-                detailsSection
-                
+                detailsSection(viewModel: viewModel)
+
                 // Labels
-                labelsSection
-                
+                labelsSection(viewModel: viewModel)
+
                 // Activity
-                activitySection
+                activitySection(viewModel: viewModel)
             }
             .padding()
         }
     }
-    
+
     // MARK: - Task Header
-    private var taskHeader: some View {
+    private func taskHeader(viewModel: TaskDetailViewModel) -> some View {
         VStack(alignment: .leading, spacing: TaskFlowSpacing.medium) {
             // Status Badge
             TFStatusBadge(status: viewModel.task.status, size: .medium)
-            
+
             // Title
             Text(viewModel.task.title)
                 .font(.system(size: 24, weight: .bold))
                 .foregroundColor(TaskFlowColors.textPrimary)
-            
+
             // Meta Info
             HStack(spacing: TaskFlowSpacing.medium) {
                 if let dueDate = viewModel.task.dueDate {
@@ -215,16 +235,16 @@ struct TaskDetailView: View {
 
                 TFPriorityBadge(priority: viewModel.task.priority, size: .small)
             }
-            
+
             // Assignee
             if let assignee = viewModel.task.assignee {
                 HStack(spacing: TaskFlowSpacing.small) {
                     Text("Assigned to:")
                         .font(.system(size: 12))
                         .foregroundColor(TaskFlowColors.textTertiary)
-                    
+
                     TFUserAvatar(user: assignee, size: .small)
-                    
+
                     Text(assignee.displayName)
                         .font(.system(size: 12))
                         .foregroundColor(TaskFlowColors.textPrimary)
@@ -232,9 +252,9 @@ struct TaskDetailView: View {
             }
         }
     }
-    
+
     // MARK: - Description Section
-    private var descriptionSection: some View {
+    private func descriptionSection(viewModel: TaskDetailViewModel) -> some View {
         VStack(alignment: .leading, spacing: TaskFlowSpacing.medium) {
             Text("Description")
                 .font(.system(size: 18, weight: .semibold))
@@ -248,27 +268,27 @@ struct TaskDetailView: View {
     }
     
     // MARK: - Subtasks Section
-    private var subtasksSection: some View {
+    private func subtasksSection(viewModel: TaskDetailViewModel) -> some View {
         VStack(alignment: .leading, spacing: TaskFlowSpacing.medium) {
             HStack {
                 Text("Subtasks")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(TaskFlowColors.textPrimary)
-                
+
                 Spacer()
-                
+
                 Text("\(viewModel.completedSubtaskCount)/\(viewModel.totalSubtaskCount)")
                     .font(.system(size: 13))
                     .foregroundColor(TaskFlowColors.textTertiary)
             }
-            
+
             // Progress
             TFTaskProgress(
                 completed: viewModel.completedSubtaskCount,
                 total: viewModel.totalSubtaskCount,
                 height: 8
             )
-            
+
             // Subtask List
             VStack(spacing: TaskFlowSpacing.small) {
                 ForEach(viewModel.subtasks, id: \.id) { subtask in
@@ -283,21 +303,21 @@ struct TaskDetailView: View {
                     )
                 }
             }
-            
+
             // Add Subtask
             AddSubtaskView { title in
                 try? viewModel.addSubtask(title: title)
             }
         }
     }
-    
+
     // MARK: - Comments Section
-    private var commentsSection: some View {
+    private func commentsSection(viewModel: TaskDetailViewModel) -> some View {
         VStack(alignment: .leading, spacing: TaskFlowSpacing.medium) {
             Text("Comments")
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(TaskFlowColors.textPrimary)
-            
+
             // Comment List
             VStack(spacing: TaskFlowSpacing.medium) {
                 ForEach(viewModel.comments, id: \.id) { comment in
@@ -306,33 +326,33 @@ struct TaskDetailView: View {
                     })
                 }
             }
-            
+
             // Add Comment
             AddCommentView { content in
                 try? viewModel.addComment(content: content)
             }
         }
     }
-    
+
     // MARK: - Actions Section
-    private var actionsSection: some View {
+    private func actionsSection(viewModel: TaskDetailViewModel) -> some View {
         VStack(alignment: .leading, spacing: TaskFlowSpacing.medium) {
             Text("Actions")
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(TaskFlowColors.textPrimary)
-            
+
             VStack(spacing: TaskFlowSpacing.small) {
                 TFButton(title: "Edit Task", style: .secondary, icon: "pencil") {
                     viewModel.showingEditSheet = true
                 }
-                
+
                 if viewModel.task.status != "done" {
                     TFButton(title: "Mark Complete", style: .success, icon: "checkmark.circle.fill") {
                         try? viewModel.updateTaskStatus("done")
                         dismiss()
                     }
                 }
-                
+
                 TFButton(title: "Delete Task", style: .danger, icon: "trash") {
                     try? viewModel.deleteTask()
                     dismiss()
@@ -340,26 +360,26 @@ struct TaskDetailView: View {
             }
         }
     }
-    
+
     // MARK: - Details Section
-    private var detailsSection: some View {
+    private func detailsSection(viewModel: TaskDetailViewModel) -> some View {
         VStack(alignment: .leading, spacing: TaskFlowSpacing.medium) {
             Text("Details")
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(TaskFlowColors.textPrimary)
-            
+
             DetailRow(
                 icon: "calendar",
                 label: "Created",
                 value: formatDate(viewModel.task.createdAt)
             )
-            
+
             DetailRow(
                 icon: "clock",
                 label: "Updated",
                 value: formatDate(viewModel.task.updatedAt)
             )
-            
+
             if let dueDate = viewModel.task.dueDate {
                 DetailRow(
                     icon: "flag",
@@ -367,7 +387,7 @@ struct TaskDetailView: View {
                     value: formatDueDate(dueDate)
                 )
             }
-            
+
             if let estimatedHours = viewModel.task.estimatedHours {
                 DetailRow(
                     icon: "hourglass",
@@ -377,14 +397,14 @@ struct TaskDetailView: View {
             }
         }
     }
-    
+
     // MARK: - Labels Section
-    private var labelsSection: some View {
+    private func labelsSection(viewModel: TaskDetailViewModel) -> some View {
         VStack(alignment: .leading, spacing: TaskFlowSpacing.medium) {
             Text("Labels")
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(TaskFlowColors.textPrimary)
-            
+
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: TaskFlowSpacing.small) {
                 ForEach(viewModel.labels, id: \.id) { taskLabel in
                     if let label = taskLabel.label {
@@ -394,14 +414,14 @@ struct TaskDetailView: View {
             }
         }
     }
-    
+
     // MARK: - Activity Section
-    private var activitySection: some View {
+    private func activitySection(viewModel: TaskDetailViewModel) -> some View {
         VStack(alignment: .leading, spacing: TaskFlowSpacing.medium) {
             Text("Activity")
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(TaskFlowColors.textPrimary)
-            
+
             VStack(spacing: TaskFlowSpacing.small) {
                 ForEach(viewModel.activityLogs.prefix(10), id: \.id) { log in
                     ActivityRow(activity: log)

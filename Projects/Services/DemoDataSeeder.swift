@@ -13,13 +13,12 @@ import SwiftData
 final class DemoDataSeeder {
     private let dataService: DataService
     private let authService: AuthService
+    private let modelContext: ModelContext
 
-    init(
-        dataService: DataService? = nil,
-        authService: AuthService? = nil
-    ) {
-        self.dataService = dataService ?? DataService.shared
-        self.authService = authService ?? AuthService.shared
+    init(modelContext: ModelContext, authService: AuthService? = nil) {
+        self.modelContext = modelContext
+        self.dataService = DataService(modelContext: modelContext)
+        self.authService = authService ?? AuthService(modelContext: modelContext)
     }
 
     func seedDemoData() async throws {

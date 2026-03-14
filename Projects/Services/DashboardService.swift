@@ -56,12 +56,12 @@ final class DashboardService {
     private let projectRepo: ProjectRepository
 
     init(
-        dataService: DataService? = nil,
+        dataService: DataService,
         taskRepo: TaskRepository? = nil,
         workspaceRepo: WorkspaceRepository? = nil,
         projectRepo: ProjectRepository? = nil
     ) {
-        self.dataService = dataService ?? DataService.shared
+        self.dataService = dataService
         self.taskRepo = taskRepo ?? TaskRepository(dataService: self.dataService)
         self.workspaceRepo = workspaceRepo ?? WorkspaceRepository(dataService: self.dataService)
         self.projectRepo = projectRepo ?? ProjectRepository(dataService: self.dataService)

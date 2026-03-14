@@ -10,8 +10,6 @@ import SwiftData
 
 @main
 struct ProjectsApp: App {
-    @StateObject private var authService = AuthService.shared
-
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             User.self,
@@ -47,12 +45,12 @@ struct ProjectsApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootContentView()
-                .environmentObject(authService)
+            //RootContentView()
+            DashboardView()
                 .modelContainer(sharedModelContainer)
-        }
 #if os(macOS)
-        .frame(minWidth: 1000, minHeight: 700)
+                .frame(minWidth: 1000, minHeight: 700)
 #endif
+        }
     }
 }

@@ -28,55 +28,64 @@ protocol DataServiceProtocol {
 // MARK: - Data Service Implementation
 @MainActor
 final class DataService: DataServiceProtocol {
-    static let shared = DataService()
+    private let modelContainer: ModelContainer?
+    private var _modelContext: ModelContext?
 
-    private let modelContainer: ModelContainer
     internal var modelContext: ModelContext {
-        modelContainer.mainContext
+        get {
+            if let context = _modelContext {
+                return context
+            } else if let container = modelContainer {
+                return container.mainContext
+            } else {
+                // Fallback: create default container
+                let schema = Schema([
+                    User.self,
+                    Workspace.self,
+                    WorkspaceMember.self,
+                    Project.self,
+                    ProjectMember.self,
+                    BoardColumn.self,
+                    Task.self,
+                    Subtask.self,
+                    Comment.self,
+                    Attachment.self,
+                    TaskLabel.self,
+                    TaskCollaborator.self,
+                    ActivityLog.self,
+                    Label.self,
+                    NotificationModel.self,
+                    SavedView.self
+                ])
+
+                let modelConfiguration = ModelConfiguration(
+                    schema: schema,
+                    isStoredInMemoryOnly: false,
+                    cloudKitDatabase: .none
+                )
+
+                let container = try! ModelContainer(for: schema, configurations: [modelConfiguration])
+                _modelContext = container.mainContext
+                return _modelContext!
+            }
+        }
     }
-    
+
     // Combine Publishers
     private let objectWillChange = PassthroughSubject<Void, Never>()
     var changes: AnyPublisher<Void, Never> {
         objectWillChange.eraseToAnyPublisher()
     }
-    
+
     init(modelContainer: ModelContainer? = nil) {
-        if let container = modelContainer {
-            self.modelContainer = container
-        } else {
-            // Create default container with all models
-            let schema = Schema([
-                User.self,
-                Workspace.self,
-                WorkspaceMember.self,
-                Project.self,
-                ProjectMember.self,
-                BoardColumn.self,
-                Task.self,
-                Subtask.self,
-                Comment.self,
-                Attachment.self,
-                TaskLabel.self,
-                TaskCollaborator.self,
-                ActivityLog.self,
-                Label.self,
-                NotificationModel.self,
-                SavedView.self
-            ])
-            
-            let modelConfiguration = ModelConfiguration(
-                schema: schema,
-                isStoredInMemoryOnly: false,
-                cloudKitDatabase: .none
-            )
-            
-            do {
-                self.modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
-            } catch {
-                fatalError("Could not create ModelContainer: \(error)")
-            }
-        }
+        self.modelContainer = modelContainer
+        self._modelContext = nil
+    }
+
+    /// Initialize with a specific ModelContext (from environment)
+    init(modelContext: ModelContext) {
+        self.modelContainer = nil
+        self._modelContext = modelContext
     }
     
     // MARK: - Generic Fetch

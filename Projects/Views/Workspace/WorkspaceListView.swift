@@ -14,24 +14,26 @@ import Combine
 class WorkspaceListViewModel: ObservableObject {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Workspace.createdAt) private var workspaces: [Workspace]
-    
+
     @Published var searchText = ""
     @Published var showingCreateWorkspace = false
     @Published var selectedWorkspace: Workspace?
     @Published var errorMessage: String?
-    
+
     private let workspaceRepo: WorkspaceRepository
     private let authService: AuthService
     private let dataService: DataService
 
     init(
+        modelContext: ModelContext? = nil,
         dataService: DataService? = nil,
         workspaceRepo: WorkspaceRepository? = nil,
         authService: AuthService? = nil
     ) {
-        self.dataService = dataService ?? DataService.shared
+        let context = modelContext ?? DataService().modelContext
+        self.dataService = dataService ?? DataService(modelContext: context)
         self.workspaceRepo = workspaceRepo ?? WorkspaceRepository(dataService: self.dataService)
-        self.authService = authService ?? AuthService.shared
+        self.authService = authService ?? AuthService(modelContext: context)
     }
     
     var filteredWorkspaces: [Workspace] {
@@ -46,8 +48,24 @@ class WorkspaceListViewModel: ObservableObject {
         }
     }
 
-    func createWorkspace(name: String, workspaceDescription: String?, color: String, icon: String) async throws {
-        guard let user = authService.currentUser else {
+    func createWorkspace(name: String, workspaceDescription: String?, color: String, icon: String) throws {
+        // Get or create local user
+        var user = authService.currentUser
+
+        if user == nil {
+            // Create local user if none exists
+            let localUser = User(
+                email: "local@taskflow.dev",
+                displayName: "Local User",
+                role: "owner",
+                isLocalUser: true
+            )
+            dataService.insert(localUser)
+            try dataService.save()
+            user = localUser
+        }
+
+        guard let user = user else {
             throw NSError(domain: "Not authenticated", code: 401)
         }
 
@@ -87,7 +105,9 @@ struct WorkspaceListView: View {
                 }
             }
             .navigationTitle("Workspaces")
+#if os(iOS)
             .navigationBarTitleDisplayMode(.large)
+#endif
             .searchable(text: $viewModel.searchText, prompt: "Search workspaces")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
@@ -164,7 +184,11 @@ struct WorkspaceListView: View {
                     }
             }
         }
+#if os(iOS)
         .listStyle(.insetGrouped)
+#elseif os(macOS)
+        .listStyle(.inset)
+#endif
     }
 }
 
@@ -297,20 +321,20 @@ struct StatBadge: View {
 // MARK: - Create Workspace View
 struct CreateWorkspaceView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var viewModel = WorkspaceListViewModel()
-    
+    @Environment(\.modelContext) private var modelContext
+
     @State private var name = ""
     @State private var description = ""
     @State private var selectedColor = "#2D5BFF"
     @State private var selectedIcon = "briefcase.fill"
     @State private var isLoading = false
     @State private var errorMessage: String?
-    
+
     let icons = ["briefcase.fill", "building.2.fill", "globe", "sparkles", "star.fill", "heart.fill", "flame.fill", "bolt.fill"]
     let colors = ["#2D5BFF", "#FF6B6B", "#00BA88", "#FFB020", "#A855F7", "#4ECDC4", "#45B7D1", "#FF4757"]
-    
+
     var onSave: (Workspace) -> Void
-    
+
     var body: some View {
         NavigationStack {
             Form {
@@ -324,7 +348,7 @@ struct CreateWorkspaceView: View {
                     )
                     .padding(.vertical, TaskFlowSpacing.medium)
                 }
-                
+
                 // Description Section
                 Section {
                     TFTextField(
@@ -336,23 +360,23 @@ struct CreateWorkspaceView: View {
                     )
                     .padding(.vertical, TaskFlowSpacing.medium)
                 }
-                
+
                 // Color Section
                 Section {
                     Text("Color")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(TaskFlowColors.textPrimary)
-                    
+
                     TFColorPicker(selectedColor: $selectedColor, colors: colors, columns: 8)
                         .padding(.vertical, TaskFlowSpacing.medium)
                 }
-                
+
                 // Icon Section
                 Section {
                     Text("Icon")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(TaskFlowColors.textPrimary)
-                    
+
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: TaskFlowSpacing.medium), count: 8), spacing: TaskFlowSpacing.medium) {
                         ForEach(icons, id: \.self) { icon in
                             Button(action: {
@@ -362,11 +386,11 @@ struct CreateWorkspaceView: View {
                                     Circle()
                                         .fill(selectedIcon == icon ? TaskFlowColors.primary.opacity(0.1) : TaskFlowColors.background)
                                         .frame(width: 44, height: 44)
-                                    
+
                                     Image(systemName: icon)
                                         .font(.system(size: 18))
                                         .foregroundColor(selectedIcon == icon ? TaskFlowColors.primary : TaskFlowColors.textSecondary)
-                                    
+
                                     if selectedIcon == icon {
                                         Circle()
                                             .stroke(TaskFlowColors.primary, lineWidth: 2)
@@ -380,31 +404,28 @@ struct CreateWorkspaceView: View {
                     .padding(.vertical, TaskFlowSpacing.medium)
                 }
             }
-        }
-        .navigationTitle("New Workspace")
-        .navigationBarTitleDisplayMode(.inline)
-        /*.toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
-                    dismiss()
+            .navigationTitle("New Workspace")
+#if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+#endif
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Create") {
+                        createWorkspace()
+                    }
+                    .disabled(name.isEmpty)
                 }
-            }
-            ToolbarItem(placement: .confirmationAction) {
-                TFButton(
-                    title: "Create",
-                    style: .primary,
-                    size: .small,
-                    isLoading: isLoading
-                ) {
-                    Task {
-                        await createWorkspace()
+
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
                     }
                 }
             }
-        }*/
+        }
     }
-    
-    private func createWorkspace() async {
+
+    private func createWorkspace() {
         guard !name.isEmpty else {
             errorMessage = "Name is required"
             return
@@ -413,23 +434,48 @@ struct CreateWorkspaceView: View {
         isLoading = true
 
         do {
-            try await viewModel.createWorkspace(
+            // Get or create local user
+            let predicate = #Predicate<User> { $0.isLocalUser == true }
+            var user: User?
+
+            user = try modelContext.fetch(FetchDescriptor<User>(predicate: predicate)).first
+
+            if user == nil {
+                user = User(
+                    email: "local@taskflow.dev",
+                    displayName: "Local User",
+                    role: "owner",
+                    isLocalUser: true
+                )
+                modelContext.insert(user!)
+                try modelContext.save()
+            }
+
+            // Create workspace
+            let workspace = Workspace(
                 name: name,
                 workspaceDescription: description.isEmpty ? nil : description,
                 color: selectedColor,
                 icon: selectedIcon
             )
+            workspace.owner = user
 
-            await MainActor.run {
-                onSave(Workspace(name: name, workspaceDescription: description, color: selectedColor, icon: selectedIcon))
-                dismiss()
-            }
+            // Create workspace member for owner
+            let member = WorkspaceMember(role: "owner")
+            member.user = user
+            workspace.members?.append(member)
+
+            modelContext.insert(workspace)
+            try modelContext.save()
+
+            onSave(workspace)
+            dismiss()
         } catch {
-            await MainActor.run {
-                errorMessage = error.localizedDescription
-                isLoading = false
-            }
+            errorMessage = error.localizedDescription
+            print("Error creating workspace: \(error)")
         }
+
+        isLoading = false
     }
 }
 
@@ -441,3 +487,4 @@ struct CreateWorkspaceView: View {
 #Preview("Create Workspace") {
     CreateWorkspaceView(onSave: { _ in })
 }
+
