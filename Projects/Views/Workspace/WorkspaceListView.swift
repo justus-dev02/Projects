@@ -90,7 +90,7 @@ struct WorkspaceListView: View {
             .navigationBarTitleDisplayMode(.large)
             .searchable(text: $viewModel.searchText, prompt: "Search workspaces")
             .toolbar {
-                ToolbarItemGroup(placement: .primaryAction) {
+                ToolbarItem(placement: .primaryAction) {
                     TFButton(title: "New", style: .primary, size: .small, icon: "plus") {
                         showingCreateSheet = true
                     }
@@ -380,28 +380,28 @@ struct CreateWorkspaceView: View {
                     .padding(.vertical, TaskFlowSpacing.medium)
                 }
             }
-            .navigationTitle("New Workspace")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItemGroup(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
+        }
+        .navigationTitle("New Workspace")
+        .navigationBarTitleDisplayMode(.inline)
+        /*.toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    dismiss()
                 }
-                ToolbarItemGroup(placement: .confirmationAction) {
-                    TFButton(
-                        title: "Create",
-                        style: .primary,
-                        size: .small,
-                        isLoading: isLoading
-                    ) {
-                        Task {
-                            await createWorkspace()
-                        }
+            }
+            ToolbarItem(placement: .confirmationAction) {
+                TFButton(
+                    title: "Create",
+                    style: .primary,
+                    size: .small,
+                    isLoading: isLoading
+                ) {
+                    Task {
+                        await createWorkspace()
                     }
                 }
             }
-        }
+        }*/
     }
     
     private func createWorkspace() async {
