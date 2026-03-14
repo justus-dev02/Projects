@@ -54,11 +54,22 @@ struct AttachmentPickerView: View {
                     }
                 }
             }
+#if os(iOS)
             .sheet(isPresented: $showingFilePicker) {
                 FileImporterView(selectedFiles: $selectedFiles) { urls in
                     handleFileSelection(urls)
                 }
             }
+#elseif os(macOS)
+            .onChange(of: showingFilePicker) { _, newValue in
+                if newValue {
+                    FileImporterView.present { urls in
+                        handleFileSelection(urls)
+                        showingFilePicker = false
+                    }
+                }
+            }
+#endif
         }
     }
     
@@ -164,37 +175,82 @@ struct UploadButton: View {
 struct FileImporterView: UIViewControllerRepresentable {
     @Binding var selectedFiles: [URL]
     let onComplete: ([URL]) -> Void
-    
+
     func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
         let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.item], asCopy: true)
         picker.allowsMultipleSelection = true
         picker.delegate = context.coordinator
         return picker
     }
-    
+
     func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {}
-    
+
     func makeCoordinator() -> Coordinator {
         Coordinator(selectedFiles: $selectedFiles, onComplete: onComplete)
     }
-    
+
     class Coordinator: NSObject, UIDocumentPickerDelegate {
         @Binding var selectedFiles: [URL]
         let onComplete: ([URL]) -> Void
-        
+
         init(selectedFiles: Binding<[URL]>, onComplete: @escaping ([URL]) -> Void) {
             _selectedFiles = selectedFiles
             self.onComplete = onComplete
         }
-        
+
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
             selectedFiles = urls
             onComplete(urls)
         }
-        
+
         func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
             selectedFiles = []
             onComplete([])
+        }
+    }
+}
+#elseif os(macOS)
+struct FileImporterView: NSViewRepresentable {
+    @Binding var selectedFiles: [URL]
+    let onComplete: ([URL]) -> Void
+
+    func makeNSView(context: Context) -> NSView {
+        return NSView()
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {}
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(selectedFiles: $selectedFiles, onComplete: onComplete)
+    }
+
+    class Coordinator: NSObject, NSOpenSavePanelDelegate {
+        @Binding var selectedFiles: [URL]
+        let onComplete: ([URL]) -> Void
+
+        init(selectedFiles: Binding<[URL]>, onComplete: @escaping ([URL]) -> Void) {
+            _selectedFiles = selectedFiles
+            self.onComplete = onComplete
+        }
+
+        func openPanel(_ sender: NSOpenPanel, shouldEnable url: URL) -> Bool {
+            return true
+        }
+    }
+}
+
+extension FileImporterView {
+    static func present(onComplete: @escaping ([URL]) -> Void) {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = true
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.begin { response in
+            if response == .OK {
+                onComplete(panel.urls)
+            } else {
+                onComplete([])
+            }
         }
     }
 }

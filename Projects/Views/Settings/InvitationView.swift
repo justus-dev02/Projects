@@ -6,9 +6,11 @@
 //
 
 import SwiftUI
+#if canImport(MessageUI)
 import MessageUI
-import Combine     // FIXED: Added missing import
-import SwiftData   // FIXED: Added missing import
+#endif
+import Combine
+import SwiftData
 
 // MARK: - Invitation View
 struct InvitationView: View {
