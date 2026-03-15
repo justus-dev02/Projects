@@ -67,7 +67,7 @@ struct TaskTemplatesView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: TaskFlowSpacing.small) {
                 ForEach(TaskTemplate.TemplateCategory.allCases) { category in
-                    FilterChip(
+                    TemplateFilterChip(
                         title: category.rawValue,
                         icon: category.icon,
                         color: Color(hex: category.color),
@@ -120,7 +120,7 @@ struct TaskTemplatesView: View {
 }
 
 // MARK: - Filter Chip
-struct FilterChip: View {
+struct TemplateFilterChip: View {
     let title: String
     let icon: String
     let color: Color
@@ -490,3 +490,4 @@ class TaskTemplatesViewModel: ObservableObject {
 #Preview("Task Templates") {
     TaskTemplatesView(projectId: nil, dataService: DataService())
 }
+

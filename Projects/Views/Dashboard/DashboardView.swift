@@ -2,7 +2,7 @@
 //  DashboardView.swift
 //  Projects
 //
-//  TaskFlow - Main Dashboard View
+//  TaskFlow - Main Dashboard View with Workspace Dropdown
 //
 
 import SwiftUI
@@ -16,6 +16,7 @@ class DashboardViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var selectedWorkspaceId: String?
+    @Published var selectedWorkspace: Workspace?
 
     private let dashboardService: DashboardService
     private let authService: AuthService
@@ -54,6 +55,13 @@ class DashboardViewModel: ObservableObject {
         do {
             stats = try dashboardService.getWorkspaceDashboardStats(workspaceId: workspaceId)
             selectedWorkspaceId = workspaceId
+
+            // Load workspace details
+            let descriptor = FetchDescriptor<Workspace>(
+                predicate: #Predicate { $0.id == workspaceId }
+            )
+            selectedWorkspace = try modelContext.fetch(descriptor).first
+
             errorMessage = nil
         } catch {
             errorMessage = error.localizedDescription
@@ -70,261 +78,76 @@ struct DashboardView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
 
-    @State private var showingCreateWorkspace = false
     @State private var showingSettings = false
-    @State private var createdWorkspace: Workspace?
-    @State private var selectedWorkspace: Workspace?
-
-    @Query(sort: \Workspace.createdAt) private var workspaces: [Workspace]
+    @State private var selectedWorkspaceId: String?
 
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // Top Toolbar with Workspace Dropdown
+            topToolbar
+
+            Divider()
+                .foregroundColor(TaskFlowColors.border)
+
+            // Main Content
             ScrollView {
                 VStack(alignment: .leading, spacing: TaskFlowSpacing.xLarge) {
-                    // Header
-                    dashboardHeader
-
-                    // Stats Grid
-                    statsGrid
-
-                    // Task Lists
-                    taskListsSection
-
-                    // All Workspaces Section
-                    allWorkspacesSection
+                    // Today Overview (replaces old stats and task lists)
+                    TodayOverviewView(workspaceId: selectedWorkspaceId)
                 }
                 .padding()
             }
             .background(TaskFlowColors.background)
-            .navigationTitle("Dashboard")
+        }
+        .background(TaskFlowColors.background)
+        .navigationTitle("")
 #if os(iOS)
-            .navigationBarTitleDisplayMode(.large)
+        .navigationBarHidden(true)
 #endif
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button(action: {
-                        showingSettings = true
-                    }) {
-                        Image(systemName: "gearshape.fill")
-                            .foregroundColor(TaskFlowColors.textPrimary)
-                    }
-                }
+        .toolbar(.hidden)
+        .task {
+            // Initialize viewModel with modelContext
+            if viewModel == nil {
+                viewModel = DashboardViewModel(modelContext: modelContext)
             }
-            .task {
-                // Initialize viewModel with modelContext
-                if viewModel == nil {
-                    viewModel = DashboardViewModel(modelContext: modelContext)
-                }
-                viewModel?.loadStats()
-            }
+            viewModel?.loadStats()
+        }
 #if os(iOS)
-            .refreshable {
-                viewModel?.loadStats()
-            }
+        .refreshable {
+            viewModel?.loadStats()
+        }
 #endif
-            .sheet(isPresented: $showingCreateWorkspace) {
-                CreateWorkspaceView { workspace in
-                    createdWorkspace = workspace
-                    showingCreateWorkspace = false
-                    // Reload dashboard stats
-                    viewModel?.loadStats()
-                }
-            }
-            .sheet(isPresented: $showingSettings) {
-                SettingsView()
-            }
-            .navigationDestination(item: $selectedWorkspace) { workspace in
-                WorkspaceDetailView(workspace: workspace)
-            }
+        .sheet(isPresented: $showingSettings) {
+            SettingsView()
         }
     }
-    
-    // MARK: - Dashboard Header
-    private var dashboardHeader: some View {
-        VStack(alignment: .leading, spacing: TaskFlowSpacing.small) {
-            Text("Welcome back!")
-                .font(.system(size: 28, weight: .bold))
-                .foregroundColor(TaskFlowColors.textPrimary)
-            
-            Text("Here's what's happening with your tasks today.")
-                .font(.system(size: 14))
-                .foregroundColor(TaskFlowColors.textSecondary)
-        }
-        .padding(.bottom, TaskFlowSpacing.medium)
-    }
-    
-    // MARK: - Stats Grid
-    private var statsGrid: some View {
-        Group {
-            if horizontalSizeClass == .regular {
-                // iPad/Mac - Grid layout
-                LazyVGrid(columns: [
-                    GridItem(.flexible()),
-                    GridItem(.flexible()),
-                    GridItem(.flexible()),
-                    GridItem(.flexible())
-                ], spacing: TaskFlowSpacing.large) {
-                    statCards
+
+    // MARK: - Top Toolbar
+    private var topToolbar: some View {
+        HStack(spacing: TaskFlowSpacing.medium) {
+            // Workspace Dropdown
+            WorkspaceDropdownView(
+                selectedWorkspaceId: $selectedWorkspaceId,
+                onWorkspaceSelected: { workspace in
+                    viewModel?.loadStatsForWorkspace(workspace.id)
                 }
-            } else {
-                // iPhone - Scrollable horizontal
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: TaskFlowSpacing.large) {
-                        statCards
-                    }
-                }
-            }
-        }
-    }
-    
-    private var statCards: some View {
-        Group {
-            TFStatCard(
-                title: "Total Tasks",
-                value: "\(viewModel?.stats?.totalTasks ?? 0)",
-                icon: "checkmark.circle.fill",
-                iconColor: TaskFlowColors.primary
             )
 
-            TFStatCard(
-                title: "Completed",
-                value: "\(viewModel?.stats?.completedTasks ?? 0)",
-                icon: "checkmark.seal.fill",
-                iconColor: TaskFlowColors.success,
-                trend: viewModel?.stats?.taskCompletionRate,
-                trendUp: true
-            )
+            Spacer()
 
-            TFStatCard(
-                title: "In Progress",
-                value: "\(viewModel?.stats?.inProgressTasks ?? 0)",
-                icon: "arrow.triangle.2.circlepath",
-                iconColor: TaskFlowColors.statusInProgress
-            )
-
-            TFStatCard(
-                title: "Overdue",
-                value: "\(viewModel?.stats?.overdueTasks ?? 0)",
-                icon: "exclamationmark.triangle.fill",
-                iconColor: TaskFlowColors.error
-            )
-        }
-    }
-    
-    // MARK: - Task Lists Section
-    private var taskListsSection: some View {
-        VStack(alignment: .leading, spacing: TaskFlowSpacing.large) {
-            Text("Task Overview")
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundColor(TaskFlowColors.textPrimary)
-            
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: TaskFlowSpacing.large) {
-                // Due Today
-                TFCard {
-                    VStack(alignment: .leading, spacing: TaskFlowSpacing.medium) {
-                        HStack {
-                            Image(systemName: "sun.max.fill")
-                                .foregroundColor(TaskFlowColors.warning)
-                            Text("Due Today")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(TaskFlowColors.textPrimary)
-                            Spacer()
-                        }
-                        
-                        if let dueToday = viewModel?.stats?.dueToday, !dueToday.isEmpty {
-                            VStack(spacing: TaskFlowSpacing.small) {
-                                ForEach(dueToday.prefix(4), id: \.id) { task in
-                                    TaskListItemView(task: task)
-                                }
-                            }
-                        } else {
-                            TFEmptyStateCard(
-                                icon: "checkmark.circle",
-                                title: "All Clear",
-                                message: "No tasks due today",
-                                actionTitle: nil
-                            )
-                        }
-                    }
-                }
-
-                // High Priority
-                TFCard {
-                    VStack(alignment: .leading, spacing: TaskFlowSpacing.medium) {
-                        HStack {
-                            Image(systemName: "star.fill")
-                                .foregroundColor(TaskFlowColors.priorityHigh)
-                            Text("High Priority")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(TaskFlowColors.textPrimary)
-                            Spacer()
-                        }
-
-                        if let highPriority = viewModel?.stats?.highPriority, !highPriority.isEmpty {
-                            VStack(spacing: TaskFlowSpacing.small) {
-                                ForEach(highPriority.prefix(4), id: \.id) { task in
-                                    TaskListItemView(task: task)
-                                }
-                            }
-                        } else {
-                            TFEmptyStateCard(
-                                icon: "star",
-                                title: "No Priority Tasks",
-                                message: "All tasks are normal priority",
-                                actionTitle: nil
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // MARK: - All Workspaces Section
-    private var allWorkspacesSection: some View {
-        VStack(alignment: .leading, spacing: TaskFlowSpacing.large) {
-            HStack {
-                Text("My Workspaces")
-                    .font(.system(size: 20, weight: .semibold))
+            // Settings Button
+            Button(action: {
+                showingSettings = true
+            }) {
+                Image(systemName: "gearshape.fill")
+                    .font(.system(size: 18))
                     .foregroundColor(TaskFlowColors.textPrimary)
-
-                Spacer()
-
-                Button(action: {
-                    showingCreateWorkspace = true
-                }) {
-                    Image(systemName: "plus.circle.fill")
-                        .foregroundColor(TaskFlowColors.primary)
-                }
-            }
-
-            if workspaces.isEmpty {
-                TFEmptyStateCard(
-                    icon: "briefcase",
-                    title: "No Workspaces",
-                    message: "Create your first workspace to get started.",
-                    actionTitle: "Create Workspace",
-                    action: {
-                        showingCreateWorkspace = true
-                    }
-                )
-            } else {
-                LazyVGrid(columns: [
-                    GridItem(.flexible()),
-                    GridItem(.flexible())
-                ], spacing: TaskFlowSpacing.large) {
-                    ForEach(workspaces.filter { !$0.isArchived }, id: \.id) { workspace in
-                        WorkspaceCard(workspace: workspace)
-                            .onTapGesture {
-                                selectedWorkspace = workspace
-                            }
-                    }
-                }
+                    .padding(TaskFlowSpacing.small)
             }
         }
+        .padding(.horizontal, TaskFlowSpacing.large)
+        .padding(.vertical, TaskFlowSpacing.medium)
+        .background(TaskFlowColors.surface)
     }
 }
 

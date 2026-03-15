@@ -34,7 +34,11 @@ struct ProjectsApp: App {
             CustomFieldDefinition.self,
             CustomFieldValue.self,
             TaskTemplate.self,
-            Invitation.self
+            Invitation.self,
+            // Message models for workspace chat
+            Message.self,
+            MessageAttachment.self,
+            MessageReaction.self
         ])
 
         let modelConfiguration = ModelConfiguration(
@@ -52,8 +56,7 @@ struct ProjectsApp: App {
 
     var body: some Scene {
         WindowGroup {
-            //RootContentView()
-            DashboardView()
+            MainAppView()
                 .modelContainer(sharedModelContainer)
 #if os(macOS)
                 .frame(minWidth: 1000, minHeight: 700)

@@ -138,24 +138,6 @@ enum ViewType: String, CaseIterable, Identifiable {
     }
 }
 
-// MARK: - Filter Options
-struct TaskFilterOptions {
-    var status: Set<String> = []
-    var priority: Set<String> = []
-    var assigneeId: String?
-    var labelId: String?
-    var dueDateRange: DateRange?
-    var showOverdueOnly: Bool = false
-    var showBlockedOnly: Bool = false
-
-    enum DateRange {
-        case today
-        case thisWeek
-        case thisMonth
-        case custom(start: Date, end: Date)
-    }
-}
-
 // MARK: - Project Detail View
 struct ProjectDetailView: View {
     @Environment(\.modelContext) private var modelContext
