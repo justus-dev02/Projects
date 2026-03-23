@@ -96,14 +96,28 @@ struct TFButton: View {
             }
             .frame(height: size.height)
             .padding(.horizontal, size.horizontalPadding)
-            .background(backgroundColor)
-            .foregroundColor(foregroundColor)
-            .cornerRadius(TaskFlowRadius.medium)
+            .foregroundStyle(foregroundColor)
+            .background(
+                Group {
+                    switch style {
+                    case .ghost:
+                        LiquidGlassBackground(style: .thin, cornerRadius: TaskFlowRadius.medium)
+                    case .outline:
+                        LiquidGlassBackground(style: .thin, cornerRadius: TaskFlowRadius.medium)
+                    case .secondary:
+                        LiquidGlassBackground(style: .regular, cornerRadius: TaskFlowRadius.medium)
+                    default:
+                        RoundedRectangle(cornerRadius: TaskFlowRadius.medium, style: .continuous)
+                            .fill(backgroundColor)
+                    }
+                }
+            )
             .overlay(
-                RoundedRectangle(cornerRadius: TaskFlowRadius.medium)
+                RoundedRectangle(cornerRadius: TaskFlowRadius.medium, style: .continuous)
                     .stroke(borderColor, lineWidth: 1)
             )
-            .opacity(isDisabled ? 0.5 : 1.0)
+            .opacity(isDisabled ? 0.6 : 1.0)
+            .shadow(color: Color.black.opacity(style == .primary ? 0.12 : 0.08), radius: style == .primary ? 8 : 6, x: 0, y: 2)
         }
         .buttonStyle(PlainButtonStyle())
         .disabled(isDisabled)
@@ -115,7 +129,7 @@ struct TFButton: View {
         case .primary:
             return isDisabled ? TaskFlowColors.textTertiary : TaskFlowColors.primary
         case .secondary:
-            return isDisabled ? TaskFlowColors.background : TaskFlowColors.background
+            return TaskFlowColors.background.opacity(0.001)
         case .ghost:
             return Color.clear
         case .outline:
@@ -179,10 +193,21 @@ struct TFIconButton: View {
         Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: size))
-                .foregroundColor(foregroundColor)
+                .foregroundStyle(foregroundColor)
                 .frame(width: 32, height: 32)
-                .background(backgroundColor)
-                .cornerRadius(TaskFlowRadius.small)
+                .background(
+                    Group {
+                        switch style {
+                        case .ghost, .outline:
+                            LiquidGlassBackground(style: .thin, cornerRadius: TaskFlowRadius.small)
+                        case .secondary:
+                            LiquidGlassBackground(style: .regular, cornerRadius: TaskFlowRadius.small)
+                        default:
+                            RoundedRectangle(cornerRadius: TaskFlowRadius.small, style: .continuous)
+                                .fill(backgroundColor)
+                        }
+                    }
+                )
         }
         .buttonStyle(PlainButtonStyle())
     }
