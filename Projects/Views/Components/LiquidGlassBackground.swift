@@ -5,6 +5,7 @@ public struct LiquidGlassBackground: View {
         case thin
         case regular
         case thick
+        case ultra
     }
     
     private let style: Style
@@ -12,7 +13,7 @@ public struct LiquidGlassBackground: View {
     private let tint: Color
     private let strokeOpacity: Double
     
-    public init(style: Style = .regular, cornerRadius: CGFloat = 12, tint: Color = .clear, strokeOpacity: Double = 0.25) {
+    public init(style: Style = .regular, cornerRadius: CGFloat = 20, tint: Color = .clear, strokeOpacity: Double = 0.3) {
         self.style = style
         self.cornerRadius = cornerRadius
         self.tint = tint
@@ -25,22 +26,42 @@ public struct LiquidGlassBackground: View {
             case .thin: return .thin
             case .regular: return .regular
             case .thick: return .thick
+            case .ultra: return .ultraThinMaterial
             }
         }()
         
-        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-            .fill(.ultraThinMaterial)
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .strokeBorder(.white.opacity(strokeOpacity), lineWidth: 1)
-                    .blendMode(.overlay)
-            )
-            .background(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(material)
-                    .overlay(tint.opacity(tint == .clear ? 0 : 0.15))
-            )
-            .compositingGroup()
+        ZStack {
+            // Main Glass Layer
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .fill(material)
+                .overlay(tint.opacity(tint == .clear ? 0 : 0.12))
+            
+            // Subtle Internal Glow (Top Left)
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .stroke(
+                    LinearGradient(
+                        colors: [.white.opacity(strokeOpacity), .white.opacity(0.05), .clear],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1.5
+                )
+                .blendMode(.screen)
+            
+            // Subtle Shadow/Depth (Bottom Right)
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .stroke(
+                    LinearGradient(
+                        colors: [.clear, .black.opacity(0.05), .black.opacity(0.1)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
+                .blendMode(.multiply)
+        }
+        .compositingGroup()
+        .shadow(color: Color.black.opacity(0.03), radius: 10, x: 0, y: 5)
     }
 }
 

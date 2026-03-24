@@ -166,33 +166,48 @@ struct TimelineView: View {
     private var timelineToolbar: some View {
         HStack(spacing: TaskFlowSpacing.medium) {
             // Navigation
-            Button(action: {
-                viewModel.navigate(direction: .previous)
-            }) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 16, weight: .semibold))
+            HStack(spacing: TaskFlowSpacing.small) {
+                Button(action: {
+                    viewModel.navigate(direction: .previous)
+                }) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(TaskFlowColors.textPrimary)
+                        .frame(width: 32, height: 32)
+                        .background(Circle().fill(TaskFlowColors.primary.opacity(0.1)))
+                }
+                
+                Text(formattedDateRange)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(TaskFlowColors.textPrimary)
+                    .frame(minWidth: 180)
+                
+                Button(action: {
+                    viewModel.navigate(direction: .next)
+                }) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(TaskFlowColors.textPrimary)
+                        .frame(width: 32, height: 32)
+                        .background(Circle().fill(TaskFlowColors.primary.opacity(0.1)))
+                }
             }
             
-            Text(formattedDateRange)
-                .font(.system(size: 16, weight: .semibold))
-                .frame(maxWidth: .infinity)
-            
-            Button(action: {
-                viewModel.navigate(direction: .next)
-            }) {
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 16, weight: .semibold))
-            }
-            
-            Divider()
-                .frame(height: 24)
+            Spacer()
             
             // Today button
             Button("Today") {
-                viewModel.startDate = Date()
-                viewModel.setZoomLevel(viewModel.zoomLevel)
+                withAnimation {
+                    viewModel.startDate = Date()
+                    viewModel.setZoomLevel(viewModel.zoomLevel)
+                }
             }
-            .font(.system(size: 13, weight: .medium))
+            .font(.system(size: 13, weight: .bold))
+            .foregroundColor(TaskFlowColors.primary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(TaskFlowColors.primary.opacity(0.1))
+            .cornerRadius(8)
             
             // Zoom picker
             Picker("Zoom", selection: $viewModel.zoomLevel) {
@@ -201,10 +216,11 @@ struct TimelineView: View {
                 }
             }
             .pickerStyle(.segmented)
-            .frame(width: 220)
+            .frame(width: 200)
         }
         .padding()
-        .background(TaskFlowColors.surface)
+        .background(TaskFlowColors.surface.opacity(0.8))
+        .liquidGlass(style: .thin, cornerRadius: 0)
     }
     
     // MARK: - Timeline Content
@@ -214,6 +230,8 @@ struct TimelineView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     // Date Headers
                     dateHeadersView(width: geometry.size.width)
+                        .padding(.vertical, 8)
+                        .background(TaskFlowColors.background.opacity(0.5))
                     
                     Divider()
                     

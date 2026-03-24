@@ -135,7 +135,7 @@ struct MainNavigationBar: View {
                     isSelected: viewModel.selectedTab == tab,
                     badgeCount: viewModel.badgeCounts[tab],
                     action: {
-                        withAnimation(.easeInOut(duration: TaskFlowAnimation.medium)) {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                             viewModel.selectedTab = tab
                             onTabSelected(tab)
                         }
@@ -143,14 +143,14 @@ struct MainNavigationBar: View {
                 )
             }
         }
-        .padding(.bottom, 0)
-        .background(TaskFlowColors.surface)
-        .overlay(
-            Rectangle()
-                .frame(height: 1)
-                .foregroundColor(TaskFlowColors.border),
-            alignment: .top
+        .padding(.horizontal, TaskFlowSpacing.medium)
+        .padding(.vertical, TaskFlowSpacing.small)
+        .background(
+            LiquidGlassBackground(style: .ultra, cornerRadius: 32)
+                .shadow(color: Color.black.opacity(0.08), radius: 15, x: 0, y: -5)
         )
+        .padding(.horizontal, TaskFlowSpacing.large)
+        .padding(.bottom, TaskFlowSpacing.small)
     }
 }
 
@@ -205,28 +205,31 @@ struct BottomTabItem: View {
             VStack(spacing: 4) {
                 ZStack {
                     Image(systemName: isSelected ? tab.selectedIcon : tab.icon)
-                        .font(.system(size: 22))
+                        .font(.system(size: 20, weight: isSelected ? .bold : .medium))
                         .foregroundColor(isSelected ? TaskFlowColors.primary : TaskFlowColors.textTertiary)
-
+                        .scaleEffect(isSelected ? 1.2 : 1.0)
+                    
                     if let badgeCount = badgeCount, badgeCount > 0 {
                         Text("\(badgeCount)")
-                            .font(.system(size: 9, weight: .bold))
+                            .font(.system(size: 10, weight: .bold))
                             .foregroundColor(.white)
-                            .frame(minWidth: 16, minHeight: 16)
-                            .padding(.horizontal, 4)
-                            .background(TaskFlowColors.error)
-                            .clipShape(Circle())
-                            .offset(x: 12, y: -12)
+                            .padding(4)
+                            .background(Circle().fill(TaskFlowColors.error))
+                            .offset(x: 12, y: -10)
                     }
                 }
-
+                
                 Text(tab.title)
-                    .font(.system(size: 10))
+                    .font(.system(size: 10, weight: isSelected ? .bold : .medium))
                     .foregroundColor(isSelected ? TaskFlowColors.primary : TaskFlowColors.textTertiary)
-                    .lineLimit(1)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, TaskFlowSpacing.small)
+            .frame(height: 48)
+            .background(
+                isSelected ? TaskFlowColors.primary.opacity(0.12) : Color.clear
+            )
+            .cornerRadius(16)
+            .padding(.horizontal, 4)
         }
         .buttonStyle(PlainButtonStyle())
     }

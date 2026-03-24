@@ -99,25 +99,20 @@ struct TFButton: View {
             .foregroundStyle(foregroundColor)
             .background(
                 Group {
-                    switch style {
-                    case .ghost:
-                        LiquidGlassBackground(style: .thin, cornerRadius: TaskFlowRadius.medium)
-                    case .outline:
-                        LiquidGlassBackground(style: .thin, cornerRadius: TaskFlowRadius.medium)
-                    case .secondary:
-                        LiquidGlassBackground(style: .regular, cornerRadius: TaskFlowRadius.medium)
-                    default:
+                    if style == .primary {
                         RoundedRectangle(cornerRadius: TaskFlowRadius.medium, style: .continuous)
                             .fill(backgroundColor)
+                    } else {
+                        LiquidGlassBackground(style: .regular, cornerRadius: TaskFlowRadius.medium, tint: backgroundColor == .clear ? .clear : backgroundColor.opacity(0.1))
                     }
                 }
             )
             .overlay(
                 RoundedRectangle(cornerRadius: TaskFlowRadius.medium, style: .continuous)
-                    .stroke(borderColor, lineWidth: 1)
+                    .stroke(borderColor, lineWidth: 1.5)
             )
             .opacity(isDisabled ? 0.6 : 1.0)
-            .shadow(color: Color.black.opacity(style == .primary ? 0.12 : 0.08), radius: style == .primary ? 8 : 6, x: 0, y: 2)
+            .shadow(color: Color.black.opacity(style == .primary ? 0.15 : 0.05), radius: style == .primary ? 10 : 5, x: 0, y: 4)
         }
         .buttonStyle(PlainButtonStyle())
         .disabled(isDisabled)

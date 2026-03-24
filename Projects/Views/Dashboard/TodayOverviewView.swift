@@ -164,47 +164,88 @@ struct TodayOverviewView: View {
     @ViewBuilder
     private func todayOverviewContent(viewModel: TodayOverviewViewModel) -> some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: TaskFlowSpacing.xLarge) {
-                // Date Header
-                dateHeader
+            VStack(alignment: .leading, spacing: TaskFlowSpacing.xxLarge) {
+                // Header
+                HStack(alignment: .bottom) {
+                    dateHeader
+                    Spacer()
+                    
+                    // Add Task Button
+                    Button(action: { /* Add Task */ }) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(width: 44, height: 44)
+                            .background(TaskFlowColors.primary)
+                            .clipShape(Circle())
+                            .shadow(color: TaskFlowColors.primary.opacity(0.3), radius: 10, x: 0, y: 5)
+                    }
+                }
 
                 // Stats Summary
                 statsSummary
 
-                // Overdue Tasks
-                if !viewModel.overdueTasks.isEmpty {
+                // Tasks Sections
+                VStack(spacing: TaskFlowSpacing.xLarge) {
+                    // Overdue Tasks
+                    if !viewModel.overdueTasks.isEmpty {
+                        taskSection(
+                            title: "Overdue",
+                            icon: "exclamationmark.triangle.fill",
+                            iconColor: TaskFlowColors.error,
+                            tasks: viewModel.overdueTasks
+                        )
+                        .padding()
+                        .liquidGlass(style: .regular, cornerRadius: 24, tint: TaskFlowColors.error.opacity(0.05))
+                    }
+
+                    // Tasks Due Today
                     taskSection(
-                        title: "Overdue",
-                        icon: "exclamationmark.triangle.fill",
-                        iconColor: TaskFlowColors.error,
-                        tasks: viewModel.overdueTasks
+                        title: "Due Today",
+                        icon: "sun.max.fill",
+                        iconColor: TaskFlowColors.warning,
+                        tasks: viewModel.tasksDueToday
                     )
+                    .padding()
+                    .liquidGlass(style: .regular, cornerRadius: 24, tint: TaskFlowColors.primary.opacity(0.05))
+
+                    // Tasks Due Tomorrow
+                    if !viewModel.tasksDueTomorrow.isEmpty {
+                        taskSection(
+                            title: "Due Tomorrow",
+                            icon: "sunrise.fill",
+                            iconColor: TaskFlowColors.success,
+                            tasks: viewModel.tasksDueTomorrow
+                        )
+                        .padding()
+                        .liquidGlass(style: .regular, cornerRadius: 24)
+                    }
                 }
 
-                // Tasks Due Today
-                taskSection(
-                    title: "Due Today",
-                    icon: "sun.max.fill",
-                    iconColor: TaskFlowColors.warning,
-                    tasks: viewModel.tasksDueToday
-                )
-
-                // Tasks Due Tomorrow
-                if !viewModel.tasksDueTomorrow.isEmpty {
-                    taskSection(
-                        title: "Due Tomorrow",
-                        icon: "sunrise.fill",
-                        iconColor: TaskFlowColors.primary,
-                        tasks: viewModel.tasksDueTomorrow
-                    )
-                }
-
-                // All Projects
+                // Projects
                 projectsSection
             }
             .padding()
         }
-        .background(TaskFlowColors.background)
+        .background(
+            ZStack {
+                TaskFlowColors.background
+                
+                // Subtle decorative gradients
+                Circle()
+                    .fill(TaskFlowColors.primary.opacity(0.05))
+                    .frame(width: 300, height: 300)
+                    .blur(radius: 60)
+                    .offset(x: -150, y: -100)
+                
+                Circle()
+                    .fill(TaskFlowColors.success.opacity(0.03))
+                    .frame(width: 250, height: 250)
+                    .blur(radius: 50)
+                    .offset(x: 150, y: 300)
+            }
+            .ignoresSafeArea()
+        )
         .task {
             viewModel.loadData()
         }
@@ -356,28 +397,30 @@ struct StatChip: View {
 
     var body: some View {
         HStack(spacing: TaskFlowSpacing.small) {
-            Image(systemName: icon)
-                .font(.system(size: 12))
-                .foregroundColor(color)
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.12))
+                    .frame(width: 32, height: 32)
+                
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(color)
+            }
 
             VStack(alignment: .leading, spacing: 0) {
                 Text(value)
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.system(size: 18, weight: .bold))
                     .foregroundColor(TaskFlowColors.textPrimary)
 
                 Text(label)
-                    .font(.system(size: 10))
-                    .foregroundColor(TaskFlowColors.textTertiary)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(TaskFlowColors.textSecondary)
             }
         }
         .padding(.horizontal, TaskFlowSpacing.medium)
         .padding(.vertical, TaskFlowSpacing.small)
-        .background(TaskFlowColors.surface)
-        .cornerRadius(TaskFlowRadius.medium)
-        .overlay(
-            RoundedRectangle(cornerRadius: TaskFlowRadius.medium)
-                .stroke(TaskFlowColors.border, lineWidth: 1)
-        )
+        .liquidGlass(style: .thin, cornerRadius: 16)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -390,18 +433,29 @@ struct QuickTaskRow: View {
         HStack(spacing: TaskFlowSpacing.medium) {
             // Completion Button
             Button(action: {
-                isCompleted.toggle()
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    isCompleted.toggle()
+                }
             }) {
-                Image(systemName: isCompleted ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 20))
-                    .foregroundColor(isCompleted ? TaskFlowColors.success : TaskFlowColors.textTertiary)
+                ZStack {
+                    Circle()
+                        .stroke(isCompleted ? TaskFlowColors.success : TaskFlowColors.textTertiary, lineWidth: 2)
+                        .frame(width: 24, height: 24)
+                    
+                    if isCompleted {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(TaskFlowColors.success)
+                            .transition(.scale.combined(with: .opacity))
+                    }
+                }
             }
             .buttonStyle(PlainButtonStyle())
 
             // Task Info
             VStack(alignment: .leading, spacing: 2) {
                 Text(task.title)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(isCompleted ? TaskFlowColors.textTertiary : TaskFlowColors.textPrimary)
                     .strikethrough(isCompleted)
                     .lineLimit(1)
@@ -409,11 +463,15 @@ struct QuickTaskRow: View {
                 HStack(spacing: TaskFlowSpacing.small) {
                     if let project = task.project {
                         Text(project.name)
-                            .font(.system(size: 11))
-                            .foregroundColor(TaskFlowColors.textTertiary)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(Color(hex: project.color))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color(hex: project.color).opacity(0.1))
+                            .cornerRadius(4)
                     }
 
-                    TFPriorityBadge(priority: task.priority, size: .small, style: .outline)
+                    TFPriorityBadge(priority: task.priority, size: .small, style: .soft)
                 }
             }
 
@@ -421,23 +479,24 @@ struct QuickTaskRow: View {
 
             // Due Time
             if let dueDate = task.dueDate {
-                Text(formatDueTime(dueDate))
-                    .font(.system(size: 12))
-                    .foregroundColor(task.isOverdue ? TaskFlowColors.error : TaskFlowColors.textTertiary)
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(formatDueTime(dueDate))
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(task.isOverdue ? TaskFlowColors.error : TaskFlowColors.textSecondary)
+                    
+                    Text("Today")
+                        .font(.system(size: 10))
+                        .foregroundColor(TaskFlowColors.textTertiary)
+                }
             }
 
             // Navigation Indicator
             Image(systemName: "chevron.right")
-                .font(.system(size: 14))
+                .font(.system(size: 12, weight: .bold))
                 .foregroundColor(TaskFlowColors.textTertiary)
         }
-        .padding(TaskFlowSpacing.medium)
-        .background(TaskFlowColors.surface)
-        .cornerRadius(TaskFlowRadius.medium)
-        .overlay(
-            RoundedRectangle(cornerRadius: TaskFlowRadius.medium)
-                .stroke(TaskFlowColors.border, lineWidth: 1)
-        )
+        .padding(TaskFlowSpacing.large)
+        .liquidGlass(style: .ultra, cornerRadius: 16)
         .onChange(of: isCompleted) { _, newValue in
             // In production, call viewModel.toggleTaskCompletion(task)
         }

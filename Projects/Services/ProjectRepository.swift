@@ -61,7 +61,9 @@ final class ProjectRepository: BaseRepository<Project> {
 
         // Create default board columns
         let defaultColumns = BoardColumn.defaultColumns()
+        project.boardColumns = []
         for column in defaultColumns {
+            column.project = project
             project.boardColumns?.append(column)
         }
 

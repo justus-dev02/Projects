@@ -54,12 +54,7 @@ struct TFCard<Content: View>: View {
     private var cardContent: some View {
         content
             .padding(padding)
-            .background(backgroundColor)
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius)
-                    .stroke(borderColor, lineWidth: 1)
-            )
-            .cornerRadius(cornerRadius)
+            .liquidGlass(style: .regular, cornerRadius: cornerRadius)
             .taskFlowShadow(showShadow ? TaskFlowShadow.medium : TaskFlowShadow.none)
     }
 }

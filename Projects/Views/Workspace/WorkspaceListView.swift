@@ -162,94 +162,91 @@ struct WorkspaceListView: View {
     
     // MARK: - Workspace List
     private var workspaceList: some View {
-        List {
-            ForEach(viewModel.filteredWorkspaces, id: \.id) { workspace in
-                WorkspaceListRow(workspace: workspace)
-                    .onTapGesture {
-                        viewModel.selectedWorkspace = workspace
+        ScrollView {
+            LazyVStack(spacing: TaskFlowSpacing.large) {
+                ForEach(viewModel.filteredWorkspaces, id: \.id) { workspace in
+                    NavigationLink(destination: WorkspaceDetailView(workspace: workspace)) {
+                        WorkspaceListRow(workspace: workspace)
                     }
-                    .swipeActions(edge: .trailing) {
-                        Button(role: .destructive) {
-                            try? viewModel.deleteWorkspace(workspace)
-                        } label: {
-                            SwiftUI.Label("Delete", systemImage: "trash")
-                        }
-
-                        Button {
-                            try? viewModel.archiveWorkspace(workspace)
-                        } label: {
-                            SwiftUI.Label("Archive", systemImage: "archivebox")
-                        }
-                        .tint(TaskFlowColors.warning)
-                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
             }
+            .padding()
         }
-#if os(iOS)
-        .listStyle(.insetGrouped)
-#elseif os(macOS)
-        .listStyle(.inset)
-#endif
+        .background(TaskFlowColors.background)
     }
 }
 
-// MARK: - Workspace Grid Card
+    // MARK: - Workspace Grid Card
 struct WorkspaceGridCard: View {
     let workspace: Workspace
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
     var body: some View {
         NavigationLink(destination: WorkspaceDetailView(workspace: workspace)) {
-            TFCard(
-                padding: TaskFlowSpacing.xLarge,
-                backgroundColor: .white
-            ) {
-                VStack(alignment: .leading, spacing: TaskFlowSpacing.medium) {
-                    // Icon
+            VStack(alignment: .leading, spacing: TaskFlowSpacing.large) {
+                // Header
+                HStack {
                     ZStack {
                         Circle()
-                            .fill(Color(hex: workspace.color).opacity(0.1))
+                            .fill(Color(hex: workspace.color).opacity(0.12))
                             .frame(width: 56, height: 56)
                         
                         Image(systemName: workspace.icon)
-                            .font(.system(size: 24))
+                            .font(.system(size: 26))
                             .foregroundColor(Color(hex: workspace.color))
-                    }
-                    
-                    // Info
-                    VStack(alignment: .leading, spacing: TaskFlowSpacing.xs) {
-                        Text(workspace.name)
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(TaskFlowColors.textPrimary)
-                            .lineLimit(1)
-                        
-                        if let workspaceDescription = workspace.workspaceDescription {
-                            Text(workspaceDescription)
-                                .font(.system(size: 13))
-                                .foregroundColor(TaskFlowColors.textSecondary)
-                                .lineLimit(2)
-                        }
                     }
                     
                     Spacer()
                     
-                    // Stats
-                    HStack(spacing: TaskFlowSpacing.large) {
-                        StatBadge(
-                            value: "\(workspace.projectCount)",
-                            label: "Projects",
-                            icon: "folder.fill"
-                        )
-                        
-                        StatBadge(
-                            value: "\(workspace.memberCount)",
-                            label: "Members",
-                            icon: "person.2.fill"
-                        )
-                        
-                        Spacer()
+                    // Owner Badge
+                    TFAvatar(name: workspace.owner?.displayName ?? "U", colorHex: workspace.owner?.avatarColor ?? workspace.color, size: .small)
+                }
+                
+                // Info
+                VStack(alignment: .leading, spacing: TaskFlowSpacing.xs) {
+                    Text(workspace.name)
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(TaskFlowColors.textPrimary)
+                        .lineLimit(1)
+                    
+                    if let workspaceDescription = workspace.workspaceDescription {
+                        Text(workspaceDescription)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(TaskFlowColors.textSecondary)
+                            .lineLimit(2)
+                            .frame(height: 32, alignment: .top)
                     }
                 }
+                
+                Spacer(minLength: 0)
+                
+                // Stats
+                HStack(spacing: TaskFlowSpacing.medium) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "folder.fill")
+                        Text("\(workspace.projectCount)")
+                    }
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(TaskFlowColors.textSecondary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(TaskFlowColors.primary.opacity(0.08))
+                    .cornerRadius(8)
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "person.2.fill")
+                        Text("\(workspace.memberCount)")
+                    }
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(TaskFlowColors.textSecondary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(TaskFlowColors.success.opacity(0.08))
+                    .cornerRadius(8)
+                }
             }
+            .padding(TaskFlowSpacing.xLarge)
+            .liquidGlass(style: .regular, cornerRadius: 28, tint: Color(hex: workspace.color).opacity(0.05))
         }
         .buttonStyle(PlainButtonStyle())
     }
@@ -264,32 +261,33 @@ struct WorkspaceListRow: View {
             // Icon
             ZStack {
                 Circle()
-                    .fill(Color(hex: workspace.color).opacity(0.1))
-                    .frame(width: 44, height: 44)
+                    .fill(Color(hex: workspace.color).opacity(0.12))
+                    .frame(width: 48, height: 48)
                 
                 Image(systemName: workspace.icon)
-                    .font(.system(size: 18))
+                    .font(.system(size: 20))
                     .foregroundColor(Color(hex: workspace.color))
             }
             
             // Info
             VStack(alignment: .leading, spacing: 2) {
                 Text(workspace.name)
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.system(size: 16, weight: .bold))
                     .foregroundColor(TaskFlowColors.textPrimary)
                 
                 Text("\(workspace.projectCount) Projects • \(workspace.memberCount) Members")
-                    .font(.system(size: 12))
-                    .foregroundColor(TaskFlowColors.textTertiary)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(TaskFlowColors.textSecondary)
             }
             
             Spacer()
             
             Image(systemName: "chevron.right")
-                .font(.system(size: 14))
+                .font(.system(size: 14, weight: .bold))
                 .foregroundColor(TaskFlowColors.textTertiary)
         }
-        .padding(.vertical, TaskFlowSpacing.small)
+        .padding(TaskFlowSpacing.large)
+        .liquidGlass(style: .ultra, cornerRadius: 20, tint: Color(hex: workspace.color).opacity(0.03))
     }
 }
 
@@ -325,101 +323,126 @@ struct CreateWorkspaceView: View {
 
     @State private var name = ""
     @State private var description = ""
-    @State private var selectedColor = "#2D5BFF"
+    @State private var selectedColor = "#6366F1"
     @State private var selectedIcon = "briefcase.fill"
     @State private var isLoading = false
     @State private var errorMessage: String?
 
     let icons = ["briefcase.fill", "building.2.fill", "globe", "sparkles", "star.fill", "heart.fill", "flame.fill", "bolt.fill"]
-    let colors = ["#2D5BFF", "#FF6B6B", "#00BA88", "#FFB020", "#A855F7", "#4ECDC4", "#45B7D1", "#FF4757"]
+    let colors = ["#6366F1", "#F43F5E", "#10B981", "#F59E0B", "#8B5CF6", "#06B6D4", "#EC4899", "#64748B"]
 
     var onSave: (Workspace) -> Void
 
     var body: some View {
         NavigationStack {
-            Form {
-                // Name Section
-                Section {
-                    TFTextField(
-                        title: "Name",
-                        placeholder: "Enter workspace name",
-                        text: $name,
-                        errorMessage: name.isEmpty && errorMessage != nil ? "Name is required" : nil
-                    )
-                    .padding(.vertical, TaskFlowSpacing.medium)
-                }
+            ScrollView {
+                VStack(spacing: TaskFlowSpacing.xLarge) {
+                    if let errorMessage = errorMessage {
+                        HStack {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                            Text(errorMessage)
+                        }
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(TaskFlowColors.error.opacity(0.8))
+                        .cornerRadius(12)
+                        .padding(.horizontal)
+                    }
 
-                // Description Section
-                Section {
-                    TFTextField(
-                        title: "Description (Optional)",
-                        placeholder: "Describe your workspace",
-                        text: $description,
-                        multiline: true,
-                        minLineCount: 3
-                    )
-                    .padding(.vertical, TaskFlowSpacing.medium)
-                }
+                    VStack(alignment: .leading, spacing: TaskFlowSpacing.large) {
+                        // Basic Info Section
+                        VStack(alignment: .leading, spacing: TaskFlowSpacing.medium) {
+                            TFTextField(
+                                title: "Name",
+                                placeholder: "Enter workspace name",
+                                text: $name
+                            )
+                            
+                            TFTextField(
+                                title: "Description (Optional)",
+                                placeholder: "Describe your workspace",
+                                text: $description,
+                                multiline: true,
+                                minLineCount: 3
+                            )
+                        }
+                        .padding()
+                        .liquidGlass(style: .regular, cornerRadius: 24)
 
-                // Color Section
-                Section {
-                    Text("Color")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(TaskFlowColors.textPrimary)
+                        // Appearance Section
+                        VStack(alignment: .leading, spacing: TaskFlowSpacing.medium) {
+                            Text("Appearance")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(TaskFlowColors.textPrimary)
 
-                    TFColorPicker(selectedColor: $selectedColor, colors: colors, columns: 8)
-                        .padding(.vertical, TaskFlowSpacing.medium)
-                }
+                            Text("Color")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(TaskFlowColors.textSecondary)
 
-                // Icon Section
-                Section {
-                    Text("Icon")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(TaskFlowColors.textPrimary)
+                            TFColorPicker(selectedColor: $selectedColor, colors: colors, columns: 8)
 
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: TaskFlowSpacing.medium), count: 8), spacing: TaskFlowSpacing.medium) {
-                        ForEach(icons, id: \.self) { icon in
-                            Button(action: {
-                                selectedIcon = icon
-                            }) {
-                                ZStack {
-                                    Circle()
-                                        .fill(selectedIcon == icon ? TaskFlowColors.primary.opacity(0.1) : TaskFlowColors.background)
-                                        .frame(width: 44, height: 44)
+                            Divider()
+                                .padding(.vertical, TaskFlowSpacing.xs)
 
-                                    Image(systemName: icon)
-                                        .font(.system(size: 18))
-                                        .foregroundColor(selectedIcon == icon ? TaskFlowColors.primary : TaskFlowColors.textSecondary)
+                            Text("Icon")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(TaskFlowColors.textSecondary)
 
-                                    if selectedIcon == icon {
-                                        Circle()
-                                            .stroke(TaskFlowColors.primary, lineWidth: 2)
-                                            .frame(width: 44, height: 44)
+                            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: TaskFlowSpacing.medium), count: 8), spacing: TaskFlowSpacing.medium) {
+                                ForEach(icons, id: \.self) { icon in
+                                    Button(action: {
+                                        selectedIcon = icon
+                                    }) {
+                                        ZStack {
+                                            Circle()
+                                                .fill(selectedIcon == icon ? Color(hex: selectedColor).opacity(0.15) : Color.primary.opacity(0.05))
+                                                .frame(width: 44, height: 44)
+
+                                            Image(systemName: icon)
+                                                .font(.system(size: 18))
+                                                .foregroundColor(selectedIcon == icon ? Color(hex: selectedColor) : TaskFlowColors.textSecondary)
+                                            
+                                            if selectedIcon == icon {
+                                                Circle()
+                                                    .stroke(Color(hex: selectedColor), lineWidth: 2)
+                                                    .frame(width: 44, height: 44)
+                                            }
+                                        }
                                     }
+                                    .buttonStyle(PlainButtonStyle())
                                 }
                             }
-                            .buttonStyle(PlainButtonStyle())
                         }
+                        .padding()
+                        .liquidGlass(style: .regular, cornerRadius: 24)
                     }
-                    .padding(.vertical, TaskFlowSpacing.medium)
+                    .padding()
                 }
             }
+            .background(TaskFlowColors.background.ignoresSafeArea())
             .navigationTitle("New Workspace")
 #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
 #endif
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Create") {
-                        createWorkspace()
-                    }
-                    .disabled(name.isEmpty)
-                }
-
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    TFButton(
+                        title: "Create",
+                        style: .primary,
+                        size: .small,
+                        isLoading: isLoading
+                    ) {
+                        createWorkspace()
+                    }
+                    .disabled(name.isEmpty)
                 }
             }
         }

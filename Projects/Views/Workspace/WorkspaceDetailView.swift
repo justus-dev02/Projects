@@ -109,22 +109,30 @@ struct WorkspaceDetailView: View {
     @ViewBuilder
     private func workspaceContent(viewModel: WorkspaceDetailViewModel) -> some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: TaskFlowSpacing.xLarge) {
+            VStack(alignment: .leading, spacing: TaskFlowSpacing.xxLarge) {
                 // Header
                 workspaceHeader(viewModel: viewModel)
+                    .padding()
+                    .liquidGlass(style: .regular, cornerRadius: 28, tint: Color(hex: viewModel.workspace.color).opacity(0.05))
 
-                // Stats
+                // Stats Summary
                 statsSection(viewModel: viewModel)
 
-                // Projects
+                // Projects Section
                 projectsSection(viewModel: viewModel)
             }
             .padding()
         }
-        .background(TaskFlowColors.background)
+        .background(
+            ZStack {
+                TaskFlowColors.background
+                Color(hex: viewModel.workspace.color).opacity(0.02)
+            }
+            .ignoresSafeArea()
+        )
         .navigationTitle(viewModel.workspace.name)
 #if os(iOS)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
 #endif
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -136,7 +144,6 @@ struct WorkspaceDetailView: View {
         .sheet(isPresented: $showingCreateProject) {
             CreateProjectView(viewModel: viewModel) { project in
                 showingCreateProject = false
-                // Reload projects to update the list
                 viewModel.loadProjects()
             }
         }
@@ -147,87 +154,88 @@ struct WorkspaceDetailView: View {
     
     // MARK: - Workspace Header
     private func workspaceHeader(viewModel: WorkspaceDetailViewModel) -> some View {
-        TFCard {
-            HStack(spacing: TaskFlowSpacing.large) {
-                // Icon
-                ZStack {
-                    Circle()
-                        .fill(Color(hex: viewModel.workspace.color).opacity(0.15))
-                        .frame(width: 64, height: 64)
+        HStack(spacing: TaskFlowSpacing.large) {
+            // Icon
+            ZStack {
+                Circle()
+                    .fill(Color(hex: viewModel.workspace.color).opacity(0.12))
+                    .frame(width: 72, height: 72)
 
-                    Image(systemName: viewModel.workspace.icon)
-                        .font(.system(size: 28))
-                        .foregroundColor(Color(hex: viewModel.workspace.color))
-                }
-
-                // Info
-                VStack(alignment: .leading, spacing: TaskFlowSpacing.xs) {
-                    Text(viewModel.workspace.name)
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(TaskFlowColors.textPrimary)
-
-                    if let workspaceDescription = viewModel.workspace.workspaceDescription {
-                        Text(workspaceDescription)
-                            .font(.system(size: 14))
-                            .foregroundColor(TaskFlowColors.textSecondary)
-                    }
-
-                    HStack(spacing: TaskFlowSpacing.medium) {
-                        SwiftUI.Label("\(viewModel.workspace.projectCount) Projects", systemImage: "folder.fill")
-                            .font(.system(size: 12))
-                            .foregroundColor(TaskFlowColors.textTertiary)
-
-                        SwiftUI.Label("\(viewModel.workspace.memberCount) Members", systemImage: "person.2.fill")
-                            .font(.system(size: 12))
-                            .foregroundColor(TaskFlowColors.textTertiary)
-                    }
-                }
-
-                Spacer()
+                Image(systemName: viewModel.workspace.icon)
+                    .font(.system(size: 32))
+                    .foregroundColor(Color(hex: viewModel.workspace.color))
             }
+
+            // Info
+            VStack(alignment: .leading, spacing: TaskFlowSpacing.xs) {
+                Text(viewModel.workspace.name)
+                    .font(.system(size: 26, weight: .bold))
+                    .foregroundColor(TaskFlowColors.textPrimary)
+
+                if let workspaceDescription = viewModel.workspace.workspaceDescription {
+                    Text(workspaceDescription)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(TaskFlowColors.textSecondary)
+                        .lineLimit(2)
+                }
+
+                HStack(spacing: TaskFlowSpacing.medium) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "folder.fill")
+                        Text("\(viewModel.workspace.projectCount)")
+                    }
+                    HStack(spacing: 4) {
+                        Image(systemName: "person.2.fill")
+                        Text("\(viewModel.workspace.memberCount)")
+                    }
+                }
+                .font(.system(size: 12, weight: .bold))
+                .foregroundColor(TaskFlowColors.textTertiary)
+                .padding(.top, 4)
+            }
+
+            Spacer()
         }
     }
 
     // MARK: - Stats Section
     private func statsSection(viewModel: WorkspaceDetailViewModel) -> some View {
-        Group {
-            if let stats = viewModel.stats {
-                Text("Overview")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundColor(TaskFlowColors.textPrimary)
+        VStack(alignment: .leading, spacing: TaskFlowSpacing.large) {
+            Text("Overview")
+                .font(.system(size: 20, weight: .bold))
+                .foregroundColor(TaskFlowColors.textPrimary)
 
+            if let stats = viewModel.stats {
                 LazyVGrid(columns: [
-                    GridItem(.flexible()),
-                    GridItem(.flexible()),
                     GridItem(.flexible()),
                     GridItem(.flexible())
                 ], spacing: TaskFlowSpacing.large) {
-                    TFStatCard(
-                        title: "Total Projects",
+                    StatChip(
                         value: "\(stats.totalProjects)",
-                        icon: "folder.fill",
-                        iconColor: TaskFlowColors.primary
+                        label: "Projects",
+                        color: TaskFlowColors.primary,
+                        icon: "folder.fill"
                     )
 
-                    TFStatCard(
-                        title: "Active",
+                    StatChip(
                         value: "\(stats.activeProjects)",
-                        icon: "play.circle.fill",
-                        iconColor: TaskFlowColors.success
+                        label: "Active",
+                        color: TaskFlowColors.success,
+                        icon: "play.circle.fill"
                     )
 
-                    TFStatCard(
-                        title: "Completed",
-                        value: "\(stats.completedProjects)",
-                        icon: "checkmark.circle.fill",
-                        iconColor: TaskFlowColors.statusDone
+                    StatChip(
+                        value: "\(stats.totalTasks)",
+                        label: "Tasks",
+                        color: TaskFlowColors.warning,
+                        icon: "checkmark.seal.fill"
                     )
                     
-                    TFStatCard(
-                        title: "Tasks",
-                        value: "\(stats.totalTasks)",
-                        icon: "checkmark.seal.fill",
-                        iconColor: TaskFlowColors.statusInProgress
+                    StatChip(
+                        value: "\(stats.completedProjects)",
+                        label: "Completed",
+                        color: Color.purple,
+                        icon: "checkmark.circle.fill"
                     )
                 }
             }
@@ -239,33 +247,34 @@ struct WorkspaceDetailView: View {
         VStack(alignment: .leading, spacing: TaskFlowSpacing.large) {
             HStack {
                 Text("Projects")
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.system(size: 20, weight: .bold))
                     .foregroundColor(TaskFlowColors.textPrimary)
 
                 Spacer()
 
                 if !viewModel.projects.isEmpty {
-                    Text("\(viewModel.projects.count) total")
-                        .font(.system(size: 14))
-                        .foregroundColor(TaskFlowColors.textTertiary)
+                    Text("\(viewModel.projects.count)")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(TaskFlowColors.textSecondary)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(TaskFlowColors.background)
+                        .cornerRadius(8)
                 }
             }
 
             if viewModel.projects.isEmpty {
                 TFEmptyStateCard(
-                    icon: "folder",
-                    title: "No Projects Yet",
-                    message: "Create your first project to start organizing tasks.",
+                    icon: "folder.badge.plus",
+                    title: "Ready to start?",
+                    message: "Create your first project to organize tasks.",
                     actionTitle: "Create Project",
                     action: {
-                        viewModel.showingCreateProject = true
+                        showingCreateProject = true
                     }
                 )
             } else {
-                LazyVGrid(columns: [
-                    GridItem(.flexible()),
-                    GridItem(.flexible())
-                ], spacing: TaskFlowSpacing.large) {
+                LazyVStack(spacing: TaskFlowSpacing.large) {
                     ForEach(viewModel.projects, id: \.id) { project in
                         ProjectCard(project: project)
                             .onTapGesture {
@@ -283,89 +292,70 @@ struct ProjectCard: View {
     let project: Project
 
     var body: some View {
-        TFCard {
-            VStack(alignment: .leading, spacing: TaskFlowSpacing.medium) {
-                // Header
+        VStack(alignment: .leading, spacing: TaskFlowSpacing.large) {
+            // Header
+            HStack {
+                ZStack {
+                    Circle()
+                        .fill(Color(hex: project.color).opacity(0.12))
+                        .frame(width: 48, height: 48)
+
+                    Image(systemName: project.icon)
+                        .font(.system(size: 22))
+                        .foregroundColor(Color(hex: project.color))
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(project.name)
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(TaskFlowColors.textPrimary)
+                        .lineLimit(1)
+
+                    TFStatusBadge(status: project.status, size: .small, style: .soft)
+                }
+
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(TaskFlowColors.textTertiary)
+            }
+
+            // Description
+            if let projectDescription = project.projectDescription {
+                Text(projectDescription)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(TaskFlowColors.textSecondary)
+                    .lineLimit(2)
+            }
+
+            // Progress & Footer
+            VStack(spacing: TaskFlowSpacing.medium) {
                 HStack {
-                    ZStack {
-                        Circle()
-                            .fill(Color(hex: project.color).opacity(0.15))
-                            .frame(width: 40, height: 40)
-
-                        Image(systemName: project.icon)
-                            .font(.system(size: 18))
-                            .foregroundColor(Color(hex: project.color))
+                    HStack(spacing: 4) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(TaskFlowColors.success)
+                        Text("\(project.completedTaskCount)/\(project.taskCount)")
+                            .font(.system(size: 12, weight: .bold))
                     }
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(project.name)
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(TaskFlowColors.textPrimary)
-                            .lineLimit(1)
-
-                        TFStatusBadge(status: project.status, size: .small)
-                    }
-
-                    Spacer()
-                }
-
-                // Description
-                if let projectDescription = project.projectDescription {
-                    Text(projectDescription)
-                        .font(.system(size: 13))
-                        .foregroundColor(TaskFlowColors.textSecondary)
-                        .lineLimit(2)
-                }
-
-                // Progress
-                VStack(spacing: TaskFlowSpacing.small) {
-                    HStack {
-                        Text("\(project.completedTaskCount) of \(project.taskCount) tasks")
-                            .font(.system(size: 12))
-                            .foregroundColor(TaskFlowColors.textTertiary)
-
-                        Spacer()
-
-                        Text("\(Int(project.progressPercentage))%")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(TaskFlowColors.textPrimary)
-                    }
-
-                    TFTaskProgress(
-                        completed: project.completedTaskCount,
-                        total: project.taskCount,
-                        height: 6
-                    )
-                }
-
-                // Footer
-                HStack(spacing: TaskFlowSpacing.medium) {
-                    if let dueDate = project.dueDate {
-                        SwiftUI.Label(formatDate(dueDate), systemImage: "calendar")
-                            .font(.system(size: 11))
-                            .foregroundColor(TaskFlowColors.textTertiary)
-                    }
+                    .foregroundColor(TaskFlowColors.textSecondary)
 
                     Spacer()
 
-                    if let members = project.members, !members.isEmpty {
-                        HStack(spacing: -8) {
-                            ForEach(members.prefix(3), id: \.id) { member in
-                                if let user = member.user {
-                                    TFAvatar(name: user.displayName, colorHex: user.avatarColor, size: .xSmall)
-                                }
-                            }
-
-                            if members.count > 3 {
-                                Text("+\(members.count - 3)")
-                                    .font(.system(size: 10))
-                                    .foregroundColor(TaskFlowColors.textTertiary)
-                            }
-                        }
-                    }
+                    Text("\(Int(project.progressPercentage))%")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(TaskFlowColors.textPrimary)
                 }
+
+                TFTaskProgress(
+                    completed: project.completedTaskCount,
+                    total: project.taskCount,
+                    height: 8
+                )
             }
         }
+        .padding(TaskFlowSpacing.xLarge)
+        .liquidGlass(style: .regular, cornerRadius: 24, tint: Color(hex: project.color).opacity(0.05))
     }
 
     private func formatDate(_ date: Date) -> String {
@@ -400,63 +390,87 @@ struct CreateProjectView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
-                    TFTextField(
-                        title: "Name",
-                        placeholder: "Enter project name",
-                        text: $name,
-                        errorMessage: name.isEmpty && errorMessage != nil ? "Name is required" : nil
-                    )
-                    .padding(.vertical, TaskFlowSpacing.medium)
-                }
+            ScrollView {
+                VStack(spacing: TaskFlowSpacing.xLarge) {
+                    if let errorMessage = errorMessage {
+                        HStack {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                            Text(errorMessage)
+                        }
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.red.opacity(0.8))
+                        .cornerRadius(12)
+                        .padding(.horizontal)
+                    }
 
-                Section {
-                    TFTextField(
-                        title: "Description (Optional)",
-                        placeholder: "Describe your project",
-                        text: $description,
-                        multiline: true,
-                        minLineCount: 3
-                    )
-                    .padding(.vertical, TaskFlowSpacing.medium)
-                }
+                    VStack(alignment: .leading, spacing: TaskFlowSpacing.large) {
+                        // Basic Info Section
+                        VStack(alignment: .leading, spacing: TaskFlowSpacing.medium) {
+                            TFTextField(
+                                title: "Name",
+                                placeholder: "Enter project name",
+                                text: $name
+                            )
+                            
+                            TFTextField(
+                                title: "Description (Optional)",
+                                placeholder: "Describe your project",
+                                text: $description,
+                                multiline: true,
+                                minLineCount: 3
+                            )
+                        }
+                        .padding()
+                        .liquidGlass(style: .regular, cornerRadius: 20)
 
-                Section {
-                    Text("Color")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(TaskFlowColors.textPrimary)
+                        // Appearance Section
+                        VStack(alignment: .leading, spacing: TaskFlowSpacing.medium) {
+                            Text("Appearance")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(TaskFlowColors.textPrimary)
 
-                    TFColorPicker(selectedColor: $selectedColor, colors: colors, columns: 8)
-                        .padding(.vertical, TaskFlowSpacing.medium)
-                }
+                            Text("Color")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(TaskFlowColors.textSecondary)
 
-                Section {
-                    Text("Icon")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(TaskFlowColors.textPrimary)
+                            TFColorPicker(selectedColor: $selectedColor, colors: colors, columns: 8)
 
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: TaskFlowSpacing.medium), count: 8), spacing: TaskFlowSpacing.medium) {
-                        ForEach(icons, id: \.self) { icon in
-                            Button(action: {
-                                selectedIcon = icon
-                            }) {
-                                ZStack {
-                                    Circle()
-                                        .fill(selectedIcon == icon ? TaskFlowColors.primary.opacity(0.1) : TaskFlowColors.background)
-                                        .frame(width: 44, height: 44)
+                            Divider()
+                                .padding(.vertical, TaskFlowSpacing.xs)
 
-                                    Image(systemName: icon)
-                                        .font(.system(size: 18))
-                                        .foregroundColor(selectedIcon == icon ? TaskFlowColors.primary : TaskFlowColors.textSecondary)
+                            Text("Icon")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(TaskFlowColors.textSecondary)
+
+                            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: TaskFlowSpacing.medium), count: 8), spacing: TaskFlowSpacing.medium) {
+                                ForEach(icons, id: \.self) { icon in
+                                    Button(action: {
+                                        selectedIcon = icon
+                                    }) {
+                                        ZStack {
+                                            Circle()
+                                                .fill(selectedIcon == icon ? Color(hex: selectedColor).opacity(0.2) : Color.primary.opacity(0.05))
+                                                .frame(width: 44, height: 44)
+
+                                            Image(systemName: icon)
+                                                .font(.system(size: 18))
+                                                .foregroundColor(selectedIcon == icon ? Color(hex: selectedColor) : TaskFlowColors.textSecondary)
+                                        }
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
                                 }
                             }
-                            .buttonStyle(PlainButtonStyle())
                         }
+                        .padding()
+                        .liquidGlass(style: .regular, cornerRadius: 20)
                     }
-                    .padding(.vertical, TaskFlowSpacing.medium)
+                    .padding()
                 }
             }
+            .background(TaskFlowColors.background.ignoresSafeArea())
             .navigationTitle("New Project")
 #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)

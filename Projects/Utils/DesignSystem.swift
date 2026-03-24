@@ -10,51 +10,52 @@ import SwiftUI
 // MARK: - Color Palette
 struct TaskFlowColors {
     // Primary Colors
-    static let primary = Color(hex: "#2D5BFF")
-    static let success = Color(hex: "#00BA88")
-    static let warning = Color(hex: "#FFB020")
-    static let error = Color(hex: "#FF4757")
+    static let primary = Color(hex: "#6366F1") // Modern Indigo/Violet
+    static let primaryLight = Color(hex: "#EEF2FF")
+    static let success = Color(hex: "#10B981")
+    static let warning = Color(hex: "#F59E0B")
+    static let error = Color(hex: "#EF4444")
     
     // Background Colors
-    static let background = Color(hex: "#FAFBFC")
-    static let backgroundDark = Color(hex: "#1A1A2E")
+    static let background = Color(hex: "#F8FAFC")
+    static let backgroundDark = Color(hex: "#0F172A")
     static let surface = Color(hex: "#FFFFFF")
-    static let surfaceDark = Color(hex: "#16213E")
+    static let surfaceDark = Color(hex: "#1E293B")
     
     // Border Colors
-    static let border = Color(hex: "#E6E9ED")
-    static let borderDark = Color(hex: "#2D3748")
+    static let border = Color(hex: "#E2E8F0")
+    static let borderDark = Color(hex: "#334155")
     
     // Text Colors
-    static let textPrimary = Color(hex: "#1A202E")
-    static let textSecondary = Color(hex: "#718096")
-    static let textTertiary = Color(hex: "#A0AEC0")
+    static let textPrimary = Color(hex: "#1E293B")
+    static let textSecondary = Color(hex: "#64748B")
+    static let textTertiary = Color(hex: "#94A3B8")
     static let textPrimaryDark = Color(hex: "#F7FAFC")
-    static let textSecondaryDark = Color(hex: "#A0AEC0")
+    static let textSecondaryDark = Color(hex: "#94A3B8")
     
-    // Label Colors
+    // Label/Tag Colors (Pastel)
     static let labelColors: [Color] = [
-        Color(hex: "#FF6B6B"),
-        Color(hex: "#4ECDC4"),
-        Color(hex: "#45B7D1"),
-        Color(hex: "#96CEB4"),
-        Color(hex: "#FFEAA7"),
-        Color(hex: "#DDA0DD"),
-        Color(hex: "#98D8C8"),
-        Color(hex: "#F7DC6F")
+        Color(hex: "#FFEDD5"), // Orange
+        Color(hex: "#DBEAFE"), // Blue
+        Color(hex: "#D1FAE5"), // Green
+        Color(hex: "#FCE7F3"), // Pink
+        Color(hex: "#F3E8FF"), // Purple
+        Color(hex: "#FEF9C3"), // Yellow
+        Color(hex: "#E0F2FE"), // Light Blue
+        Color(hex: "#FFCFD2")  // Red Pastel
     ]
     
     // Priority Colors
-    static let priorityLow = Color(hex: "#95A5A6")
-    static let priorityMedium = Color(hex: "#45B7D1")
-    static let priorityHigh = Color(hex: "#FFB020")
-    static let priorityUrgent = Color(hex: "#FF4757")
+    static let priorityLow = Color(hex: "#94A3B8")
+    static let priorityMedium = Color(hex: "#6366F1")
+    static let priorityHigh = Color(hex: "#F59E0B")
+    static let priorityUrgent = Color(hex: "#EF4444")
     
     // Status Colors
-    static let statusTodo = Color(hex: "#95A5A6")
-    static let statusInProgress = Color(hex: "#45B7D1")
-    static let statusReview = Color(hex: "#FFB020")
-    static let statusDone = Color(hex: "#00BA88")
+    static let statusTodo = Color(hex: "#94A3B8")
+    static let statusInProgress = Color(hex: "#6366F1")
+    static let statusReview = Color(hex: "#F59E0B")
+    static let statusDone = Color(hex: "#10B981")
 }
 
 // MARK: - Typography
@@ -80,23 +81,24 @@ struct TaskFlowTypography {
 // MARK: - Spacing
 struct TaskFlowSpacing {
     static let none: CGFloat = 0
-    static let xs: CGFloat = 2
-    static let small: CGFloat = 4
-    static let medium: CGFloat = 8
-    static let large: CGFloat = 12
-    static let xLarge: CGFloat = 16
-    static let xxLarge: CGFloat = 20
-    static let huge: CGFloat = 24
-    static let xHuge: CGFloat = 32
+    static let xs: CGFloat = 4
+    static let small: CGFloat = 8
+    static let medium: CGFloat = 12
+    static let large: CGFloat = 16
+    static let xLarge: CGFloat = 24
+    static let xxLarge: CGFloat = 32
+    static let huge: CGFloat = 40
+    static let xHuge: CGFloat = 48
 }
 
 // MARK: - Corner Radius
 struct TaskFlowRadius {
     static let none: CGFloat = 0
-    static let small: CGFloat = 4
-    static let medium: CGFloat = 8
-    static let large: CGFloat = 12
-    static let xLarge: CGFloat = 16
+    static let small: CGFloat = 8
+    static let medium: CGFloat = 12
+    static let large: CGFloat = 20
+    static let xLarge: CGFloat = 28
+    static let huge: CGFloat = 36
     static let full: CGFloat = 999
 }
 

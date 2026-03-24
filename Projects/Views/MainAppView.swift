@@ -35,10 +35,6 @@ struct MainAppView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @StateObject private var viewModel: MainAppViewModel
 
-    @State private var selectedTask: Task?
-    @State private var selectedProject: Project?
-    @State private var selectedWorkspace: Workspace?
-
     init() {
         _viewModel = StateObject(wrappedValue: MainAppViewModel())
     }
@@ -62,7 +58,7 @@ struct MainAppView: View {
 
     // MARK: - iPhone Layout (Bottom Tab Bar)
     private var iPhoneLayout: some View {
-        VStack(spacing: 0) {
+        ZStack(alignment: .bottom) {
             // Content Area
             NavigationStack {
                 ZStack {
@@ -79,6 +75,7 @@ struct MainAppView: View {
                         SettingsView()
                     }
                 }
+                .padding(.bottom, 90) // Space for floating bar
             }
 
             // Bottom Navigation Bar
@@ -89,6 +86,7 @@ struct MainAppView: View {
                 }
             )
         }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 
     // MARK: - iPad/Mac Layout (Top Navigation)
@@ -158,9 +156,6 @@ struct WorkspaceProjectsView: View {
             // Search and Filter Bar
             projectsToolbar(viewModel: viewModel)
 
-            Divider()
-                .foregroundColor(TaskFlowColors.border)
-
             // Content
             Group {
                 if viewModel.isLoading {
@@ -176,7 +171,7 @@ struct WorkspaceProjectsView: View {
         .background(TaskFlowColors.background)
         .navigationTitle("Projects")
 #if os(iOS)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
 #endif
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -184,14 +179,28 @@ struct WorkspaceProjectsView: View {
                     showingCreateProject = true
                 }) {
                     Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 20))
                         .foregroundColor(TaskFlowColors.primary)
                 }
             }
         }
         .sheet(isPresented: $showingCreateProject) {
-            CreateProjectSheet { project in
-                showingCreateProject = false
-                viewModel.loadProjects()
+            if let wsId = workspaceId {
+                // If we have a workspace ID, use the repository-based creation
+                // Fetch workspace first
+                let ws = try? modelContext.fetch(FetchDescriptor<Workspace>(predicate: #Predicate { $0.id == wsId })).first
+                if let workspace = ws {
+                    CreateProjectView(viewModel: WorkspaceDetailViewModel(workspace: workspace, modelContext: modelContext)) { project in
+                        showingCreateProject = false
+                        viewModel.loadProjects()
+                    }
+                }
+            } else {
+                // Fallback or generic creation
+                CreateProjectSheet { project in
+                    showingCreateProject = false
+                    viewModel.loadProjects()
+                }
             }
         }
         .task {
@@ -205,14 +214,6 @@ struct WorkspaceProjectsView: View {
         .navigationDestination(item: $selectedProject) { project in
             ProjectDetailView(project: project)
         }
-        .task {
-            viewModel.loadProjects()
-        }
-#if os(iOS)
-        .refreshable {
-            viewModel.loadProjects()
-        }
-#endif
     }
 
     // MARK: - Toolbar
@@ -240,12 +241,7 @@ struct WorkspaceProjectsView: View {
             }
         }
         .padding(TaskFlowSpacing.medium)
-        .background(TaskFlowColors.surface)
-        .cornerRadius(TaskFlowRadius.medium)
-        .overlay(
-            RoundedRectangle(cornerRadius: TaskFlowRadius.medium)
-                .stroke(TaskFlowColors.border, lineWidth: 1)
-        )
+        .liquidGlass(style: .thin, cornerRadius: 16)
         .padding()
     }
 
@@ -272,10 +268,7 @@ struct WorkspaceProjectsView: View {
     // MARK: - Projects Grid
     private func projectsGrid(viewModel: WorkspaceProjectsViewModel) -> some View {
         ScrollView {
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: TaskFlowSpacing.large) {
+            LazyVStack(spacing: TaskFlowSpacing.large) {
                 ForEach(viewModel.filteredProjects, id: \.id) { project in
                     ProjectCard(project: project)
                         .onTapGesture {
@@ -312,9 +305,7 @@ class WorkspaceProjectsViewModel: ObservableObject {
         isLoading = true
 
         do {
-            var descriptor = FetchDescriptor<Project>(
-                sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
-            )
+            var descriptor: FetchDescriptor<Project>
 
             // Filter by workspace if specified
             if let workspaceId = workspaceId {
@@ -358,87 +349,76 @@ struct CreateProjectSheet: View {
 
     @State private var name = ""
     @State private var description = ""
-    @State private var selectedColor = "#4ECDC4"
+    @State private var selectedColor = "#6366F1"
     @State private var selectedIcon = "folder.fill"
     @State private var isLoading = false
 
     let icons = ["folder.fill", "star.fill", "bolt.fill", "heart.fill", "flame.fill", "target", "globe", "sparkles"]
-    let colors = ["#4ECDC4", "#2D5BFF", "#FF6B6B", "#00BA88", "#FFB020", "#A855F7", "#45B7D1", "#FF4757"]
+    let colors = ["#6366F1", "#F43F5E", "#10B981", "#F59E0B", "#8B5CF6", "#06B6D4", "#EC4899", "#64748B"]
 
     var onSave: (Project) -> Void
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
-                    TFTextField(
-                        title: "Name",
-                        placeholder: "Enter project name",
-                        text: $name,
-                        errorMessage: name.isEmpty ? "Name is required" : nil
-                    )
-                    .padding(.vertical, TaskFlowSpacing.medium)
-                }
+            ScrollView {
+                VStack(spacing: TaskFlowSpacing.large) {
+                    VStack(alignment: .leading, spacing: TaskFlowSpacing.medium) {
+                        TFTextField(
+                            title: "Name",
+                            placeholder: "Enter project name",
+                            text: $name
+                        )
+                        
+                        TFTextField(
+                            title: "Description (Optional)",
+                            placeholder: "Describe your project",
+                            text: $description,
+                            multiline: true,
+                            minLineCount: 3
+                        )
+                    }
+                    .padding()
+                    .liquidGlass(style: .regular, cornerRadius: 24)
+                    
+                    VStack(alignment: .leading, spacing: TaskFlowSpacing.medium) {
+                        Text("Appearance")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(TaskFlowColors.textPrimary)
 
-                Section {
-                    TFTextField(
-                        title: "Description (Optional)",
-                        placeholder: "Describe your project",
-                        text: $description,
-                        multiline: true,
-                        minLineCount: 3
-                    )
-                    .padding(.vertical, TaskFlowSpacing.medium)
-                }
+                        TFColorPicker(selectedColor: $selectedColor, colors: colors, columns: 8)
 
-                Section {
-                    Text("Color")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(TaskFlowColors.textPrimary)
-
-                    TFColorPicker(selectedColor: $selectedColor, colors: colors, columns: 8)
-                        .padding(.vertical, TaskFlowSpacing.medium)
-                }
-
-                Section {
-                    Text("Icon")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(TaskFlowColors.textPrimary)
-
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: TaskFlowSpacing.medium), count: 8), spacing: TaskFlowSpacing.medium) {
-                        ForEach(icons, id: \.self) { icon in
-                            Button(action: {
-                                selectedIcon = icon
-                            }) {
-                                ZStack {
-                                    Circle()
-                                        .fill(selectedIcon == icon ? TaskFlowColors.primary.opacity(0.1) : TaskFlowColors.background)
-                                        .frame(width: 44, height: 44)
-
-                                    Image(systemName: icon)
-                                        .font(.system(size: 18))
-                                        .foregroundColor(selectedIcon == icon ? TaskFlowColors.primary : TaskFlowColors.textSecondary)
-
-                                    if selectedIcon == icon {
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: TaskFlowSpacing.medium), count: 8), spacing: TaskFlowSpacing.medium) {
+                            ForEach(icons, id: \.self) { icon in
+                                Button(action: {
+                                    selectedIcon = icon
+                                }) {
+                                    ZStack {
                                         Circle()
-                                            .stroke(TaskFlowColors.primary, lineWidth: 2)
+                                            .fill(selectedIcon == icon ? Color(hex: selectedColor).opacity(0.15) : Color.primary.opacity(0.05))
                                             .frame(width: 44, height: 44)
+
+                                        Image(systemName: icon)
+                                            .font(.system(size: 18))
+                                            .foregroundColor(selectedIcon == icon ? Color(hex: selectedColor) : TaskFlowColors.textSecondary)
                                     }
                                 }
+                                .buttonStyle(PlainButtonStyle())
                             }
-                            .buttonStyle(PlainButtonStyle())
                         }
                     }
-                    .padding(.vertical, TaskFlowSpacing.medium)
+                    .padding()
+                    .liquidGlass(style: .regular, cornerRadius: 24)
                 }
+                .padding()
             }
+            .background(TaskFlowColors.background.ignoresSafeArea())
             .navigationTitle("New Project")
 #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
 #endif
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Create") {
+                    TFButton(title: "Create", style: .primary, size: .small, isLoading: isLoading) {
                         createProject()
                     }
                     .disabled(name.isEmpty)
@@ -465,6 +445,14 @@ struct CreateProjectSheet: View {
                 color: selectedColor,
                 icon: selectedIcon
             )
+            
+            // Initialize default columns as in repository
+            project.boardColumns = [
+                BoardColumn(name: "To Do", color: "#F43F5E", order: 0),
+                BoardColumn(name: "In Progress", color: "#F59E0B", order: 1),
+                BoardColumn(name: "Review", color: "#06B6D4", order: 2),
+                BoardColumn(name: "Done", color: "#10B981", order: 3)
+            ]
 
             modelContext.insert(project)
             try modelContext.save()
