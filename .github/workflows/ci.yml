@@ -9,6 +9,12 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# An explicit bash shell runs with `-o pipefail`, so a failing xcodebuild is not hidden by the
+# exit code of xcbeautify at the end of the pipe.
+defaults:
+  run:
+    shell: bash
+
 env:
   DERIVED_DATA: ${{ github.workspace }}/DerivedData
   IOS_DESTINATION: "platform=iOS Simulator,name=iPhone 17 Pro"
@@ -31,13 +37,18 @@ jobs:
       - uses: actions/checkout@v4
       - name: Select Xcode
         run: sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
-      - name: Run swift test
+      - name: Run package tests
         working-directory: Packages/ProjectsKit
+        # xcodebuild instead of `swift test`: the SwiftPM build of the runner's toolchain copies
+        # String Catalogs instead of compiling them, so the localization tests find no .lproj.
         # Snapshot references are recorded on a developer machine; text rendering differs
-        # between macOS versions, so CI skips the pixel comparison.
+        # between macOS versions, so CI skips the pixel comparison. xcodebuild passes
+        # TEST_RUNNER_-prefixed variables to the test process without the prefix.
         env:
-          PROJECTS_SKIP_SNAPSHOTS: "1"
-        run: swift test --parallel
+          TEST_RUNNER_PROJECTS_SKIP_SNAPSHOTS: "1"
+        run: |
+          xcodebuild test -scheme ProjectsKit-Package -destination 'platform=macOS' \
+            -derivedDataPath "$DERIVED_DATA" | xcbeautify --renderer github-actions
 
   app:
     name: Build, test and localization check

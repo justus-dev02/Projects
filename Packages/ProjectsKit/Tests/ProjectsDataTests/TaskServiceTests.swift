@@ -106,6 +106,7 @@ struct TaskServiceTests {
         try stack.tasks.move(c, to: todo, at: 1)
 
         #expect(todo.sortedTasks.map(\.title) == ["A", "C", "B"])
+        #expect(c.order == (a.order + b.order) / 2)
         #expect(c.order == SparseOrder.spacing / 2)
     }
 
