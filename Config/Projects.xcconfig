@@ -1,0 +1,27 @@
+// Build identity of Projects, shared by all targets.
+//
+// Nothing personal is checked in: the defaults below build and run locally without an Apple
+// Developer account ("Sign to Run Locally"). To sign with your own team, copy
+// `Config/Local.xcconfig.example` to `Config/Local.xcconfig` (ignored by Git) and fill it in.
+// Values in Local.xcconfig override the ones in this file.
+
+// Signing
+DEVELOPMENT_TEAM =
+CODE_SIGN_STYLE = Automatic
+
+// Identifiers. Every other identifier is derived from PROJECTS_BUNDLE_ID.
+PROJECTS_BUNDLE_ID = com.example.Projects
+PROJECTS_WIDGET_BUNDLE_ID = $(PROJECTS_BUNDLE_ID).ProjectsWidgets
+PROJECTS_TESTS_BUNDLE_ID = $(PROJECTS_BUNDLE_ID).Tests
+PROJECTS_UI_TESTS_BUNDLE_ID = $(PROJECTS_BUNDLE_ID).UITests
+
+// The App Group shared by the app and the widget. iOS requires the "group." prefix; on macOS,
+// apps distributed outside the App Store use the team identifier as the prefix (Stats does the
+// same with $(TeamIdentifierPrefix), which is only resolved in entitlements, not in the Info.plist).
+APP_GROUP_ID[sdk=iphone*] = group.$(PROJECTS_BUNDLE_ID)
+APP_GROUP_ID[sdk=macosx*] = $(DEVELOPMENT_TEAM).$(PROJECTS_BUNDLE_ID)
+
+// Only used when iCloud sync is enabled (see SharedConfiguration.isCloudSyncAvailable).
+ICLOUD_CONTAINER_ID = iCloud.$(PROJECTS_BUNDLE_ID)
+
+#include? "Local.xcconfig"

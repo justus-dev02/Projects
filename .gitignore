@@ -1,0 +1,24 @@
+# macOS
+.DS_Store
+
+# Xcode
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+*.xcresult
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/ProjectsKit/.build/
+Packages/ProjectsKit/.swiftpm/
+
+# Snapshot test failures are written to the temporary directory, never into the repo.
+
+# Coverage data written by instrumented test binaries
+*.profraw
+*.profdata
+
+# Personal signing settings (team ID, bundle identifiers). See Config/Local.xcconfig.example.
+Config/Local.xcconfig

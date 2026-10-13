@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DERIVED_DATA: ${{ github.workspace }}/DerivedData
+  IOS_DESTINATION: "platform=iOS Simulator,name=iPhone 17 Pro"
+
+jobs:
+  lint:
+    name: SwiftLint
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SwiftLint
+        run: brew install swiftlint
+      - name: Lint
+        run: swiftlint lint --strict --reporter github-actions-logging
+
+  package-tests:
+    name: Package tests (macOS)
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
+      - name: Run swift test
+        working-directory: Packages/ProjectsKit
+        # Snapshot references are recorded on a developer machine; text rendering differs
+        # between macOS versions, so CI skips the pixel comparison.
+        env:
+          PROJECTS_SKIP_SNAPSHOTS: "1"
+        run: swift test --parallel
+
+  app:
+    name: Build, test and localization check
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
+      - name: Build macOS app
+        run: |
+          xcodebuild build -scheme Projects -destination 'platform=macOS' \
+            -derivedDataPath "$DERIVED_DATA" CODE_SIGNING_ALLOWED=NO | xcbeautify --renderer github-actions
+      - name: Check translations
+        run: python3 scripts/check_localizations.py "$DERIVED_DATA"
+      - name: Test on iOS Simulator (English and German)
+        run: |
+          xcodebuild test -scheme Projects -destination "$IOS_DESTINATION" \
+            -derivedDataPath "$DERIVED_DATA" -resultBundlePath TestResults.xcresult \
+            -enableCodeCoverage YES CODE_SIGNING_ALLOWED=NO | xcbeautify --renderer github-actions
+      - name: Test on macOS (English and German)
+        # Signs to run locally (no team in CI), which macOS UI tests need.
+        run: |
+          xcodebuild test -scheme Projects -destination 'platform=macOS' \
+            -derivedDataPath "$DERIVED_DATA" -resultBundlePath TestResults-macOS.xcresult | xcbeautify --renderer github-actions
+      - name: Coverage summary
+        if: always()
+        run: xcrun xccov view --report --only-targets TestResults.xcresult || true
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TestResults
+          path: TestResults.xcresult

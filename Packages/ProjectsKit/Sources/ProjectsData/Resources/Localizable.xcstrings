@@ -1,0 +1,621 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ (Copy)" : {
+      "comment" : "Title of a duplicated task",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (Kopie)"
+          }
+        }
+      }
+    },
+    "App Store screenshots" : {
+      "comment" : "Sample task",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App-Store-Screenshots"
+          }
+        }
+      }
+    },
+    "Book moving van" : {
+      "comment" : "Sample task",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Umzugswagen buchen"
+          }
+        }
+      }
+    },
+    "Bug" : {
+      "comment" : "Default label",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehler"
+          }
+        }
+      }
+    },
+    "Bug report" : {
+      "comment" : "Sample template",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehlerbericht"
+          }
+        }
+      }
+    },
+    "Bug: " : {
+      "comment" : "Sample template task title",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehler: "
+          }
+        }
+      }
+    },
+    "Build onboarding flow" : {
+      "comment" : "Sample task",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onboarding bauen"
+          }
+        }
+      }
+    },
+    "Cancel internet contract" : {
+      "comment" : "Sample task",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Internetvertrag kündigen"
+          }
+        }
+      }
+    },
+    "Collect customer testimonials" : {
+      "comment" : "Sample task",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kundenstimmen sammeln"
+          }
+        }
+      }
+    },
+    "Completed at" : {
+      "comment" : "CSV column",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erledigt am"
+          }
+        }
+      }
+    },
+    "Do we localize the captions?" : {
+      "comment" : "Sample open question",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Übersetzen wir die Bildunterschriften?"
+          }
+        }
+      }
+    },
+    "Docs" : {
+      "comment" : "Default label",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doku"
+          }
+        }
+      }
+    },
+    "Done" : {
+      "comment" : "Default board column",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erledigt"
+          }
+        }
+      }
+    },
+    "Due date" : {
+      "comment" : "CSV column",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fälligkeitsdatum"
+          }
+        }
+      }
+    },
+    "Estimated hours" : {
+      "comment" : "CSV column",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geschätzte Stunden"
+          }
+        }
+      }
+    },
+    "Everything needed for version 1.0 in the App Store." : {
+      "comment" : "Sample project description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alles für Version 1.0 im App Store."
+          }
+        }
+      }
+    },
+    "Feature" : {
+      "comment" : "Default label",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feature"
+          }
+        }
+      }
+    },
+    "Finalize app icon" : {
+      "comment" : "Sample task",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App-Icon finalisieren"
+          }
+        }
+      }
+    },
+    "Fix and verify" : {
+      "comment" : "Sample template subtask",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beheben und prüfen"
+          }
+        }
+      }
+    },
+    "Fix crash when deleting a column" : {
+      "comment" : "Sample task",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Absturz beim Löschen einer Spalte beheben"
+          }
+        }
+      }
+    },
+    "Happens only when the column still contains tasks." : {
+      "comment" : "Sample comment",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passiert nur, wenn die Spalte noch Aufgaben enthält."
+          }
+        }
+      }
+    },
+    "I uploaded the final illustrations." : {
+      "comment" : "Sample comment",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ich habe die finalen Illustrationen hochgeladen."
+          }
+        }
+      }
+    },
+    "Improvement" : {
+      "comment" : "Default label",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbesserung"
+          }
+        }
+      }
+    },
+    "In Progress" : {
+      "comment" : "Default board column",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In Arbeit"
+          }
+        }
+      }
+    },
+    "iOS App Launch" : {
+      "comment" : "Sample project",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Launch der iOS-App"
+          }
+        }
+      }
+    },
+    "Labels" : {
+      "comment" : "CSV column",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Labels"
+          }
+        }
+      }
+    },
+    "Moving" : {
+      "comment" : "Sample project",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Umzug"
+          }
+        }
+      }
+    },
+    "Notification permission" : {
+      "comment" : "Sample subtask",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mitteilungs-Erlaubnis"
+          }
+        }
+      }
+    },
+    "Open questions" : {
+      "comment" : "CSV column",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offene Fragen"
+          }
+        }
+      }
+    },
+    "People" : {
+      "comment" : "CSV column: people involved in the task",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beteiligte"
+          }
+        }
+      }
+    },
+    "Personal" : {
+      "comment" : "Sample workspace",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privat"
+          }
+        }
+      }
+    },
+    "Priority" : {
+      "comment" : "CSV column",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Priorität"
+          }
+        }
+      }
+    },
+    "Project" : {
+      "comment" : "CSV column",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt"
+          }
+        }
+      }
+    },
+    "Projects for the team at the office." : {
+      "comment" : "Sample workspace description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekte für das Team im Büro."
+          }
+        }
+      }
+    },
+    "Reproduce" : {
+      "comment" : "Sample template subtask",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproduzieren"
+          }
+        }
+      }
+    },
+    "Review" : {
+      "comment" : "Default board column",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prüfung"
+          }
+        }
+      }
+    },
+    "Sample data option" : {
+      "comment" : "Sample subtask",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Option für Beispieldaten"
+          }
+        }
+      }
+    },
+    "Should every screen have a skip button?" : {
+      "comment" : "Sample open question",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Braucht jeder Bildschirm einen Überspringen-Button?"
+          }
+        }
+      }
+    },
+    "Status" : {
+      "comment" : "CSV column",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status"
+          }
+        }
+      }
+    },
+    "Steps to reproduce:\nExpected result:\nActual result:" : {
+      "comment" : "Sample template details",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schritte zum Reproduzieren:\nErwartetes Ergebnis:\nTatsächliches Ergebnis:"
+          }
+        }
+      }
+    },
+    "Story points" : {
+      "comment" : "Sample custom field",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Story Points"
+          }
+        }
+      }
+    },
+    "Submit for review" : {
+      "comment" : "Sample task",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zur Prüfung einreichen"
+          }
+        }
+      }
+    },
+    "Subtasks" : {
+      "comment" : "CSV column",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unteraufgaben"
+          }
+        }
+      }
+    },
+    "Three screens, skippable, works with VoiceOver." : {
+      "comment" : "Sample task description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drei Seiten, überspringbar, funktioniert mit VoiceOver."
+          }
+        }
+      }
+    },
+    "Title" : {
+      "comment" : "CSV column",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Titel"
+          }
+        }
+      }
+    },
+    "To Do" : {
+      "comment" : "Default board column",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offen"
+          }
+        }
+      }
+    },
+    "Website Relaunch" : {
+      "comment" : "Sample project",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Website-Relaunch"
+          }
+        }
+      }
+    },
+    "Weekly team sync" : {
+      "comment" : "Sample task",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wöchentliches Team-Meeting"
+          }
+        }
+      }
+    },
+    "Welcome screen" : {
+      "comment" : "Sample subtask",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Willkommensbildschirm"
+          }
+        }
+      }
+    },
+    "Which device sizes are required?" : {
+      "comment" : "Sample open question",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welche Gerätegrößen werden benötigt?"
+          }
+        }
+      }
+    },
+    "Work" : {
+      "comment" : "Sample workspace",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arbeit"
+          }
+        }
+      }
+    },
+    "Workspace" : {
+      "comment" : "CSV column",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workspace"
+          }
+        }
+      }
+    },
+    "Write a failing test" : {
+      "comment" : "Sample template subtask",
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehlschlagenden Test schreiben"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

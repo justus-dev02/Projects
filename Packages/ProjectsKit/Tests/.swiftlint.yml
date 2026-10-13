@@ -1,0 +1,4 @@
+# Tests may force unwrap fixtures: a crash is a clear test failure.
+disabled_rules:
+  - force_unwrapping
+  - large_tuple

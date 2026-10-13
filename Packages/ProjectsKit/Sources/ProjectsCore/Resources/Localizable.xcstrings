@@ -1,0 +1,1215 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ could not be found." : {
+      "comment" : "Error",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ wurde nicht gefunden."
+          }
+        }
+      }
+    },
+    "%@ must not be empty." : {
+      "comment" : "Validation error",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ darf nicht leer sein."
+          }
+        }
+      }
+    },
+    "%@ must not be longer than %lld characters." : {
+      "comment" : "Validation error",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ darf höchstens %2$lld Zeichen lang sein."
+          }
+        }
+      }
+    },
+    "A choice field needs at least one option." : {
+      "comment" : "Error",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Auswahlfeld braucht mindestens eine Option."
+          }
+        }
+      }
+    },
+    "A project needs at least one column." : {
+      "comment" : "Error",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Projekt braucht mindestens eine Spalte."
+          }
+        }
+      }
+    },
+    "A task cannot depend on itself." : {
+      "comment" : "Error",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Aufgabe kann nicht von sich selbst abhängen."
+          }
+        }
+      }
+    },
+    "Active" : {
+      "comment" : "Project status",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktiv"
+          }
+        }
+      }
+    },
+    "Any time" : {
+      "comment" : "Due date filter",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beliebig"
+          }
+        }
+      }
+    },
+    "Attachment %@ added" : {
+      "comment" : "Activity",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anhang %@ hinzugefügt"
+          }
+        }
+      }
+    },
+    "Attachments can be at most %@." : {
+      "comment" : "Error",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anhänge dürfen höchstens %@ groß sein."
+          }
+        }
+      }
+    },
+    "Blue" : {
+      "comment" : "Color name",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blau"
+          }
+        }
+      }
+    },
+    "Bug" : {
+      "comment" : "Template category",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehler"
+          }
+        }
+      }
+    },
+    "Checkbox" : {
+      "comment" : "Custom field type",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontrollkästchen"
+          }
+        }
+      }
+    },
+    "Choice" : {
+      "comment" : "Custom field type",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auswahl"
+          }
+        }
+      }
+    },
+    "Column" : {
+      "comment" : "Entity name",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spalte"
+          }
+        }
+      }
+    },
+    "Column name" : {
+      "comment" : "Form field",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spaltenname"
+          }
+        }
+      }
+    },
+    "Comment" : {
+      "comment" : "Form field",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kommentar"
+          }
+        }
+      }
+    },
+    "Comment added" : {
+      "comment" : "Activity",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kommentar hinzugefügt"
+          }
+        }
+      }
+    },
+    "Completed" : {
+      "comment" : "Project status",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abgeschlossen"
+          }
+        }
+      }
+    },
+    "Daily" : {
+      "comment" : "Recurrence frequency",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Täglich"
+          }
+        }
+      }
+    },
+    "Date" : {
+      "comment" : "Custom field type",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datum"
+          }
+        }
+      }
+    },
+    "Dependencies are only possible within the same project." : {
+      "comment" : "Error",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abhängigkeiten sind nur innerhalb desselben Projekts möglich."
+          }
+        }
+      }
+    },
+    "Design" : {
+      "comment" : "Template category",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Design"
+          }
+        }
+      }
+    },
+    "Documentation" : {
+      "comment" : "Template category",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokumentation"
+          }
+        }
+      }
+    },
+    "Done" : {
+      "comment" : "Task status",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erledigt"
+          }
+        }
+      }
+    },
+    "Due date" : {
+      "comment" : "Sort option",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fälligkeitsdatum"
+          }
+        }
+      }
+    },
+    "Due date removed" : {
+      "comment" : "Activity",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fälligkeitsdatum entfernt"
+          }
+        }
+      }
+    },
+    "Due date set to %@" : {
+      "comment" : "Activity",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fälligkeitsdatum auf %@ gesetzt"
+          }
+        }
+      }
+    },
+    "Every %lld days" : {
+      "comment" : "Recurrence description",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Jeden Tag"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Alle %lld Tage"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every day"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every %lld days"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Every %lld months" : {
+      "comment" : "Recurrence description",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Jeden Monat"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Alle %lld Monate"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every month"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every %lld months"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Every %lld weeks" : {
+      "comment" : "Recurrence description",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Jede Woche"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Alle %lld Wochen"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every week"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every %lld weeks"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Every %lld years" : {
+      "comment" : "Recurrence description",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Jedes Jahr"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Alle %lld Jahre"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every year"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every %lld years"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Feature" : {
+      "comment" : "Template category",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feature"
+          }
+        }
+      }
+    },
+    "Field name" : {
+      "comment" : "Form field",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feldname"
+          }
+        }
+      }
+    },
+    "General" : {
+      "comment" : "Template category",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allgemein"
+          }
+        }
+      }
+    },
+    "Gray" : {
+      "comment" : "Color name",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grau"
+          }
+        }
+      }
+    },
+    "Green" : {
+      "comment" : "Color name",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grün"
+          }
+        }
+      }
+    },
+    "High" : {
+      "comment" : "Task priority",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoch"
+          }
+        }
+      }
+    },
+    "In Progress" : {
+      "comment" : "Task status",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In Arbeit"
+          }
+        }
+      }
+    },
+    "Indigo" : {
+      "comment" : "Color name",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indigo"
+          }
+        }
+      }
+    },
+    "Label name" : {
+      "comment" : "Form field",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Labelname"
+          }
+        }
+      }
+    },
+    "Link" : {
+      "comment" : "Custom field type",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link"
+          }
+        }
+      }
+    },
+    "Low" : {
+      "comment" : "Task priority",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niedrig"
+          }
+        }
+      }
+    },
+    "Medium" : {
+      "comment" : "Task priority",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mittel"
+          }
+        }
+      }
+    },
+    "Meeting" : {
+      "comment" : "Template category",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meeting"
+          }
+        }
+      }
+    },
+    "Monthly" : {
+      "comment" : "Recurrence frequency",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monatlich"
+          }
+        }
+      }
+    },
+    "Moved to %@" : {
+      "comment" : "Activity",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verschoben nach „%@“"
+          }
+        }
+      }
+    },
+    "Newest first" : {
+      "comment" : "Sort option",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neueste zuerst"
+          }
+        }
+      }
+    },
+    "Next 7 days" : {
+      "comment" : "Due date filter",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nächste 7 Tage"
+          }
+        }
+      }
+    },
+    "Next occurrence created" : {
+      "comment" : "Activity",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nächste Wiederholung erstellt"
+          }
+        }
+      }
+    },
+    "No due date" : {
+      "comment" : "Due date filter",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ohne Fälligkeit"
+          }
+        }
+      }
+    },
+    "Number" : {
+      "comment" : "Custom field type",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zahl"
+          }
+        }
+      }
+    },
+    "On Hold" : {
+      "comment" : "Project status",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausiert"
+          }
+        }
+      }
+    },
+    "Orange" : {
+      "comment" : "Color name",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orange"
+          }
+        }
+      }
+    },
+    "Overdue" : {
+      "comment" : "Due date filter",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überfällig"
+          }
+        }
+      }
+    },
+    "Pink" : {
+      "comment" : "Color name",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pink"
+          }
+        }
+      }
+    },
+    "Please try again. If the problem persists, restart the app." : {
+      "comment" : "Recovery",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitte versuche es erneut. Wenn das Problem bleibt, starte die App neu."
+          }
+        }
+      }
+    },
+    "Priority" : {
+      "comment" : "Sort option",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Priorität"
+          }
+        }
+      }
+    },
+    "Priority changed to %@" : {
+      "comment" : "Activity",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Priorität auf %@ geändert"
+          }
+        }
+      }
+    },
+    "Project" : {
+      "comment" : "Entity name",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt"
+          }
+        }
+      }
+    },
+    "Project name" : {
+      "comment" : "Form field",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projektname"
+          }
+        }
+      }
+    },
+    "Purple" : {
+      "comment" : "Color name",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lila"
+          }
+        }
+      }
+    },
+    "Red" : {
+      "comment" : "Color name",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rot"
+          }
+        }
+      }
+    },
+    "Research" : {
+      "comment" : "Template category",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recherche"
+          }
+        }
+      }
+    },
+    "Review" : {
+      "comment" : "Task status",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prüfung"
+          }
+        }
+      }
+    },
+    "Status changed to %@" : {
+      "comment" : "Activity",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status auf „%@“ geändert"
+          }
+        }
+      }
+    },
+    "Subtask added" : {
+      "comment" : "Activity",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unteraufgabe hinzugefügt"
+          }
+        }
+      }
+    },
+    "Subtask title" : {
+      "comment" : "Form field",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Titel der Unteraufgabe"
+          }
+        }
+      }
+    },
+    "Task" : {
+      "comment" : "Entity name",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufgabe"
+          }
+        }
+      }
+    },
+    "Task completed" : {
+      "comment" : "Activity",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufgabe erledigt"
+          }
+        }
+      }
+    },
+    "Task created" : {
+      "comment" : "Activity",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufgabe erstellt"
+          }
+        }
+      }
+    },
+    "Task reopened" : {
+      "comment" : "Activity",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufgabe wieder geöffnet"
+          }
+        }
+      }
+    },
+    "Task title" : {
+      "comment" : "Form field",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufgabentitel"
+          }
+        }
+      }
+    },
+    "Teal" : {
+      "comment" : "Color name",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Türkis"
+          }
+        }
+      }
+    },
+    "Template" : {
+      "comment" : "Entity name",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorlage"
+          }
+        }
+      }
+    },
+    "Template name" : {
+      "comment" : "Form field",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name der Vorlage"
+          }
+        }
+      }
+    },
+    "Text" : {
+      "comment" : "Custom field type",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text"
+          }
+        }
+      }
+    },
+    "The backup file is damaged or not a Projects backup." : {
+      "comment" : "Error",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Datei ist beschädigt oder kein Projects-Backup."
+          }
+        }
+      }
+    },
+    "The database could not be opened." : {
+      "comment" : "Error",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Datenbank konnte nicht geöffnet werden."
+          }
+        }
+      }
+    },
+    "The value for “%@” is not valid." : {
+      "comment" : "Error",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Wert für „%@“ ist ungültig."
+          }
+        }
+      }
+    },
+    "This backup was created with a newer version of Projects (format %lld)." : {
+      "comment" : "Error",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Backup wurde mit einer neueren Projects-Version erstellt (Format %lld)."
+          }
+        }
+      }
+    },
+    "This dependency would create a cycle." : {
+      "comment" : "Error",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Abhängigkeit würde einen Zyklus erzeugen."
+          }
+        }
+      }
+    },
+    "Title" : {
+      "comment" : "Sort option",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Titel"
+          }
+        }
+      }
+    },
+    "To Do" : {
+      "comment" : "Task status",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offen"
+          }
+        }
+      }
+    },
+    "Today" : {
+      "comment" : "Due date filter",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heute"
+          }
+        }
+      }
+    },
+    "Update Projects and try again." : {
+      "comment" : "Recovery",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktualisiere Projects und versuche es erneut."
+          }
+        }
+      }
+    },
+    "Urgent" : {
+      "comment" : "Task priority",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dringend"
+          }
+        }
+      }
+    },
+    "Weekly" : {
+      "comment" : "Recurrence frequency",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wöchentlich"
+          }
+        }
+      }
+    },
+    "Workspace" : {
+      "comment" : "Entity name",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workspace"
+          }
+        }
+      }
+    },
+    "Workspace name" : {
+      "comment" : "Form field",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name des Workspace"
+          }
+        }
+      }
+    },
+    "Yearly" : {
+      "comment" : "Recurrence frequency",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jährlich"
+          }
+        }
+      }
+    },
+    "Yellow" : {
+      "comment" : "Color name",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gelb"
+          }
+        }
+      }
+    },
+    "You can restore a backup or reset the local database in Settings." : {
+      "comment" : "Recovery",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du kannst in den Einstellungen ein Backup wiederherstellen oder die lokale Datenbank zurücksetzen."
+          }
+        }
+      }
+    },
+    "Your changes could not be saved." : {
+      "comment" : "Error",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Änderungen konnten nicht gesichert werden."
+          }
+        }
+      }
+    },
+    "“%@” is required." : {
+      "comment" : "Error",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ ist ein Pflichtfeld."
+          }
+        }
+      }
+    },
+    "Finish the blocking tasks first, or remove them under “Blocked By”." : {
+      "comment" : "Recovery",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erledige zuerst die blockierenden Aufgaben oder entferne sie unter „Blockiert durch“."
+          }
+        }
+      }
+    },
+    "Name" : {
+      "comment" : "Form field: name of a person involved in a task",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
+          }
+        }
+      }
+    },
+    "Question" : {
+      "comment" : "Form field: an open question about a task",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frage"
+          }
+        }
+      }
+    },
+    "“%@” is waiting for %@." : {
+      "comment" : "Error: a blocked task cannot be started. Second argument is a list of task titles",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%1$@“ wartet auf %2$@."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

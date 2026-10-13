@@ -1,490 +1,108 @@
-# TaskFlow 🚀
+# Projects
 
-**Native iOS/iPadOS/macOS Task Management Application**
+A task manager for iPhone, iPad and Mac built with SwiftUI and SwiftData: Kanban boards, lists,
+calendar and timeline per project, reminders you can act on, widgets, Siri/Shortcuts and iCloud sync.
+Fully localized in **English and German**.
 
-A full-featured, native Apple platform task management app built with Swift, SwiftUI, and SwiftData - inspired by Trello and Asana.
+| Today | Board | Task | Calendar |
+|---|---|---|---|
+| ![Today](docs/screenshots/en-01-Today.png) | ![Board](docs/screenshots/de-07-Board.png) | ![Task](docs/screenshots/en-03-TaskDetail.png) | ![Calendar](docs/screenshots/de-09-Calendar.png) |
 
----
+## Features
 
-## 📱 Platform Support
+- **Workspaces → projects → tasks** with subtasks, comments, attachments, labels and activity history
+- **Five project views**: Kanban board (drag & drop *and* an accessible "Move to" alternative), grouped list, table (filter by To Do / In Progress / Review / Done, always sorted by priority), month calendar, timeline
+- **Task rules**: board columns map to statuses, dependencies ("Blocked By") with cycle detection – a blocked task stays in To Do until its blockers are done –, recurring tasks that create their next occurrence on completion, project-specific custom fields (text, number, date, checkbox, choice, link)
+- **At a glance in every list**: people involved, open questions, blocked state, and a dot for comments (green while a comment synced from another device is unread)
+- **Search, filters, sorting and paging** that run inside SQLite (`FetchDescriptor` predicates), bulk actions, undo for deletions
+- **Reminders** with "Mark as Done" and "Remind Me in 1 Hour" actions right in the notification
+- **Widget** "Today" (Home Screen, Lock Screen, macOS) with interactive completion
+- **App Intents**: add, complete and open tasks from Siri, Spotlight and Shortcuts; tasks are indexed in Spotlight
+- **iCloud sync** across the user's devices (private CloudKit database), JSON backup/restore, CSV export
+- **macOS**: menu commands and keyboard shortcuts (⌘N, ⇧⌘N, ⌘F, ⌘1–4, Edit ▸ Undo), Settings window
+- **Accessibility**: Dynamic Type, VoiceOver labels and actions, color contrast checks, no information conveyed by color alone
 
-- **iOS** 17.0+ (iPhone)
-- **iPadOS** 17.0+ (iPad)
-- **macOS** 14.0+ (Mac)
-
----
-
-## ✨ Features
-
-### Core Features
-
-| Feature | Status | Description |
-|---------|--------|-------------|
-| **Dashboard** | ✅ | Real-time statistics, task overview, workspace progress |
-| **Workspaces** | ✅ | Multiple workspaces with custom colors and icons |
-| **Projects** | ✅ | Kanban boards with customizable columns |
-| **Tasks** | ✅ | Full task management with priorities, labels, due dates |
-| **Subtasks** | ✅ | Checklists with progress tracking |
-| **Comments** | ✅ | Task comments with author information |
-| **Labels** | ✅ | Color-coded labels for categorization |
-| **Notifications** | ✅ | In-app notifications system |
-| **Settings** | ✅ | User profile, preferences, data management |
-
-### Multi-Platform Features
-
-| Feature | iOS | iPadOS | macOS |
-|---------|-----|--------|-------|
-| Tab Navigation | ✅ | ✅ | ❌ |
-| Sidebar Navigation | ❌ | ✅ | ✅ |
-| Adaptive Layouts | ✅ | ✅ | ✅ |
-| Keyboard Shortcuts | ❌ | ❌ | ✅ |
-| Window Support | ❌ | ❌ | ✅ |
-
----
-
-## 🏗️ Architecture
-
-### Project Structure
+## Architecture at a glance
 
 ```
-Projects/
-├── Models/                    # SwiftData Models
-│   ├── User.swift            # User model with roles
-│   ├── Workspace.swift       # Workspace & members
-│   ├── Project.swift         # Projects & board columns
-│   ├── Task.swift            # Tasks, subtasks, comments
-│   ├── Label.swift           # Label categories
-│   ├── NotificationModel.swift
-│   └── SavedView.swift
-│
-├── Services/                  # Business Logic
-│   ├── DataService.swift     # Core data service
-│   ├── AuthService.swift     # Authentication
-│   ├── WorkspaceRepository.swift
-│   ├── ProjectRepository.swift
-│   ├── TaskRepository.swift
-│   ├── DashboardService.swift
-│   └── DemoDataSeeder.swift  # Demo data generation
-│
-├── ViewModels/               # View Models (MVVM)
-│
-├── Views/                    # SwiftUI Views
-│   ├── Components/          # Reusable UI components
-│   │   ├── TFButton.swift
-│   │   ├── TFCard.swift
-│   │   ├── TFBadge.swift
-│   │   ├── TFTextField.swift
-│   │   ├── TFAvatar.swift
-│   │   ├── TFProgressBar.swift
-│   │   └── TFDatePicker.swift
-│   │
-│   ├── Dashboard/           # Dashboard views
-│   ├── Workspace/           # Workspace management
-│   ├── Project/             # Project & Kanban board
-│   ├── Task/                # Task detail views
-│   ├── Settings/            # Settings & notifications
-│   └── RootContentView.swift
-│
-├── Utils/                   # Utilities
-│   └── DesignSystem.swift   # Design tokens, colors
-│
-└── Resources/               # Assets
+┌──────────────────────── App (Projects target) ────────────────────────┐
+│ Features/ (SwiftUI views, @Query for reading)    App/ (composition root, │
+│ Platform/ (notifications, Spotlight, widgets,    router, errors, toasts)│
+│            sync status, MetricKit)               Intents/ (App Intents) │
+└───────────────┬───────────────────────────────────────────────┬────────┘
+                │ writes via services                          │
+┌───────────────▼──────────── ProjectsKit (Swift package) ──────▼────────┐
+│ ProjectsData: SwiftData schema (versioned), migrations, services       │
+│ ProjectsDesignSystem: tokens and accessible components                 │
+│ ProjectsCore: pure domain logic – no UI, no persistence                │
+└────────────────────────────────────────────────────────────────────────┘
+        ▲ shared with the widget extension through an App Group store
 ```
 
-### Architecture Pattern: MVVM + Repository
+Reading uses `@Query` so views update automatically; every write goes through a service that
+validates input, keeps board and status consistent, records activity, saves and notifies the
+platform integrations. Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and the
+[architecture decision records](docs/adr).
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                      Views (SwiftUI)                     │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐      │
-│  │  Dashboard  │  │  Workspace  │  │   Project   │      │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘      │
-└─────────┼────────────────┼────────────────┼─────────────┘
-          │                │                │
-┌─────────▼────────────────▼────────────────▼─────────────┐
-│                   ViewModels                             │
-│         (ObservableObject, @Published)                   │
-└─────────┬────────────────┬────────────────┬─────────────┘
-          │                │                │
-┌─────────▼────────────────▼────────────────▼─────────────┐
-│                   Repositories                           │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐      │
-│  │  Workspace  │  │   Project   │  │    Task     │      │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘      │
-└─────────┼────────────────┼────────────────┼─────────────┘
-          │                │                │
-┌─────────▼────────────────▼────────────────▼─────────────┐
-│                  DataService (SwiftData)                 │
-│              (ModelContext, FetchDescriptors)            │
-└──────────────────────────────────────────────────────────┘
-```
+## Requirements
 
----
+- Xcode 26.2 or later, iOS/iPadOS 26.2+, macOS 26.2+
+- For iCloud sync and the widget on a device: an Apple Developer account (see [docs/RELEASE.md](docs/RELEASE.md))
 
-## 🎨 Design System
-
-### Colors
-
-```swift
-// Primary
-primary: #2D5BFF      // Blue
-success: #00BA88      // Green
-warning: #FFB020      // Orange
-error: #FF4757        // Red
-
-// Background
-background: #FAFBFC   // Light gray
-surface: #FFFFFF      // White
-border: #E6E9ED       // Border gray
-```
-
-### Typography
-
-- **Display**: System bold (24-32pt)
-- **Headline**: System semibold (18-20pt)
-- **Body**: System regular (14-16pt)
-- **Caption**: System regular (11-13pt)
-
-### Components
-
-All UI components follow a consistent naming convention (`TF*`):
-
-- `TFButton` - Primary, Secondary, Ghost, Outline, Danger
-- `TFCard` - Content cards with shadows
-- `TFBadge` - Status, Priority, Label badges
-- `TFTextField` - Text inputs with validation
-- `TFAvatar` - User avatars with initials
-- `TFProgressBar` - Linear and circular progress
-- `TFDatePicker` - Date selection with quick options
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Xcode 15.0+
-- macOS 14.0+ (for development)
-- iOS 17.0+ SDK
-- Swift 5.9+
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   cd /Users/justusschmiernow/Documents/Development/XCode/Projects
-   ```
-
-2. **Open in Xcode**
-   ```bash
-   open Projects.xcodeproj
-   ```
-
-3. **Build and Run**
-   - Select your target device (iPhone, iPad, or Mac)
-   - Press `Cmd + R` to build and run
-
-### First Launch
-
-On first launch, you'll see:
-1. **Onboarding flow** (4 pages)
-2. **Local login** (automatic, no password required)
-3. **Demo data** (automatically seeded)
-
----
-
-## 📁 Data Models
-
-### Core Entities
-
-#### User
-```swift
-@Model
-class User {
-    var id: String           // UUID
-    var email: String
-    var displayName: String
-    var avatarColor: String
-    var role: String         // owner, admin, member
-    var isLocalUser: Bool
-}
-```
-
-#### Workspace
-```swift
-@Model
-class Workspace {
-    var id: String
-    var name: String
-    var description: String?
-    var color: String
-    var icon: String
-    var projects: [Project]?
-    var members: [WorkspaceMember]?
-    var labels: [Label]?
-}
-```
-
-#### Project
-```swift
-@Model
-class Project {
-    var id: String
-    var name: String
-    var status: String       // active, paused, completed
-    var boardColumns: [BoardColumn]?
-    var tasks: [Task]?
-}
-```
-
-#### Task
-```swift
-@Model
-class Task {
-    var id: String
-    var title: String
-    var status: String       // todo, inProgress, review, done
-    var priority: String     // low, medium, high, urgent
-    var subtasks: [Subtask]?
-    var comments: [Comment]?
-    var labels: [TaskLabel]?
-    var assignee: User?
-}
-```
-
----
-
-## 🧪 Testing
-
-### Unit Tests (54+ tests)
-
-Run tests with `Cmd + U`:
+## Getting started
 
 ```bash
-# User tests
-testUserCreation()
-testUserRandomColor()
-
-# Workspace tests
-testWorkspaceCreation()
-testWorkspaceStats()
-
-# Project tests
-testProjectCreation()
-testProjectProgress()
-
-# Task tests
-testTaskCreation()
-testTaskOverdue()
-testTaskPriorityWeights()
-
-# Performance tests
-testPerformanceExample()
+open Projects.xcodeproj         # run the "Projects" scheme on "My Mac" or a simulator
 ```
 
-### UI Tests (32+ tests)
+The project builds and runs without an Apple Developer account ("Sign to Run Locally"). To sign
+with your own team, copy the local configuration and fill in your values:
 
 ```bash
-# Launch tests
-testLaunch()
-
-# Onboarding tests
-testOnboardingFlow()
-
-# Navigation tests
-testBottomTabNavigation()
-
-# Feature tests
-testDashboardDisplays()
-testWorkspaceList()
-testCreateWorkspace()
-testSettingsView()
+cp Config/Local.xcconfig.example Config/Local.xcconfig   # ignored by Git
 ```
 
-### Test Coverage
-
-| Category | Tests | Coverage |
-|----------|-------|----------|
-| Models | 27 | ~90% |
-| Services | 15 | ~85% |
-| Views | 12 | ~80% |
-| **Total** | **54+** | **~87%** |
-
----
-
-## 🔐 Security
-
-### Authentication
-
-- **Local Mode**: No password required for demo
-- **Demo Credentials**: 
-  - Email: `local@taskflow.dev`
-  - Auto-login on first launch
-
-### Data Protection
-
-- SwiftData local storage
-- No external network calls (offline-first)
-- User data isolated per installation
-
----
-
-## 📊 SwiftData Integration
-
-### Model Container Setup
-
-```swift
-let schema = Schema([
-    User.self,
-    Workspace.self,
-    WorkspaceMember.self,
-    Project.self,
-    BoardColumn.self,
-    Task.self,
-    Subtask.self,
-    Comment.self,
-    Label.self,
-    NotificationModel.self
-])
-
-let modelContainer = try ModelContainer(
-    for: schema,
-    configurations: [ModelConfiguration()]
-)
+```
+DEVELOPMENT_TEAM = ABCDE12345            // your team ID
+PROJECTS_BUNDLE_ID = com.example.Projects // a reverse-DNS identifier you own
 ```
 
-### Fetching Data
+The widget, test bundles, App Group and iCloud container are derived from these two values
+([Config/Projects.xcconfig](Config/Projects.xcconfig)). No personal identifier is checked in.
 
-```swift
-@Query private var workspaces: [Workspace]
-@Query(sort: \Workspace.createdAt) var sortedWorkspaces: [Workspace]
+The app starts empty, with a short onboarding. Without signing (e.g. in CI) the app falls back to
+a local store. Debug builds can fill an in-memory store with a fixed sample data set for tests and
+screenshots (launch arguments `-ui-testing -seed-demo-data`); release builds do not contain it.
 
-// With predicate
-let predicate = #Predicate<Workspace> { $0.isArchived == false }
-let activeWorkspaces = try dataService.fetch(Workspace.self, predicate: predicate)
-```
+## Quality
 
----
+| Check | How | Status |
+|---|---|---|
+| Package tests (Core, Data, DesignSystem) | `cd Packages/ProjectsKit && swift test` | 185 tests |
+| App unit + UI tests on iOS in **English and German** | `xcodebuild test -scheme Projects -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` | 26 unit + 5 UI tests per language |
+| App unit + UI tests on macOS in **English and German** | `xcodebuild test -scheme Projects -destination 'platform=macOS'` | 26 unit + 4 UI tests per language |
+| Translations complete, format specifiers match | `scripts/check_localizations.py <DerivedData>` | 521 keys, 0 errors |
+| Lint | `swiftlint lint --strict` | 0 findings |
+| Compiler | Swift 6 language mode, strict concurrency | 0 warnings |
 
-## 🎯 Key Implementation Details
+Line coverage (measured, not estimated): ProjectsCore 84 %, ProjectsData 87 %, ProjectsDesignSystem 48 %,
+app target 37 % (mostly SwiftUI view code, which the UI tests exercise end to end).
+CI runs all of the above on every push: [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
-### Adaptive Layouts
+Performance with 10,000 tasks (dashboard in 5.5 ms, filtered page in 12 ms): [docs/PERFORMANCE.md](docs/PERFORMANCE.md).
 
-```swift
-@Environment(\.horizontalSizeClass) private var horizontalSizeClass
+## Localization
 
-var body: some View {
-    if horizontalSizeClass == .regular {
-        // iPad/Mac layout
-        NavigationSplitView { ... }
-    } else {
-        // iPhone layout
-        NavigationStack { ... }
-    }
-}
-```
+All UI text lives in String Catalogs (`*.xcstrings`) per module, with plural rules and positional
+arguments where German word order differs. The language follows the system setting
+(per-app language on iOS: Settings ▸ Projects ▸ Language). See [ADR 0005](docs/adr/0005-localization.md).
 
-### Repository Pattern
+## Project history
 
-```swift
-@MainActor
-final class TaskRepository: BaseRepository<Task> {
-    func getTasksForProject(projectId: String) throws -> [Task] {
-        let predicate = #Predicate<Task> { $0.project?.id == projectId }
-        return try dataService.fetch(Task.self, predicate: predicate)
-    }
-    
-    func createTask(title: String, ...) throws -> Task {
-        let task = Task(title: title, ...)
-        dataService.insert(task)
-        try dataService.save()
-        return task
-    }
-}
-```
+The first version of this project (March 2026) is preserved in the Git history (up to commit
+`45eaae2`). Version 2 is a rewrite that replaced it with the architecture above; the reasons are documented in
+[ADR 0001](docs/adr/0001-modular-architecture.md) and [ADR 0003](docs/adr/0003-single-user-scope.md).
 
----
+## License
 
-## 🛠️ Development
-
-### Code Style
-
-- **SwiftLint**: Enabled for consistent code style
-- **Format**: 4 spaces, no tabs
-- **Naming**: PascalCase for types, camelCase for variables
-
-### Git Workflow
-
-```bash
-# Feature branch
-git checkout -b feature/new-feature
-
-# Commit changes
-git add .
-git commit -m "feat: add new feature"
-
-# Push and PR
-git push origin feature/new-feature
-```
-
----
-
-## 📈 Roadmap
-
-### Phase 1 (Completed) ✅
-- [x] Core data models
-- [x] Repository pattern
-- [x] Basic UI components
-- [x] Dashboard views
-- [x] Workspace management
-- [x] Project Kanban boards
-- [x] Task management
-- [x] Subtasks & comments
-- [x] Multi-platform support
-
-### Phase 2 (Planned)
-- [ ] Drag-and-drop for Kanban
-- [ ] Real-time sync (CloudKit)
-- [ ] Push notifications
-- [ ] Widget support
-- [ ] Siri Shortcuts
-- [ ] Apple Watch app
-
-### Phase 3 (Future)
-- [ ] Team collaboration
-- [ ] File attachments
-- [ ] Advanced filtering
-- [ ] Calendar view
-- [ ] Timeline/Gantt view
-- [ ] Export to PDF/CSV
-
----
-
-## 📄 License
-
-This project is for portfolio demonstration purposes.
-
----
-
-## 👨‍💻 Author
-
-**TaskFlow Team**
-
-A Senior-Level Portfolio Project demonstrating:
-- Full-stack iOS/macOS development
-- SwiftUI & SwiftData expertise
-- MVVM architecture
-- Multi-platform support
-- Comprehensive testing
-
----
-
-## 🙏 Acknowledgments
-
-- Inspired by Trello and Asana
-- Built with SwiftUI & SwiftData
-- Designed for Apple platforms
-
----
-
-**Built with ❤️ for Apple Platforms**
+Released under the [MIT License](LICENSE).

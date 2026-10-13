@@ -1,0 +1,70 @@
+included:
+  - Projects
+  - Shared
+  - ProjectsWidgets
+  - ProjectsTests
+  - ProjectsUITests
+  - Packages/ProjectsKit/Sources
+  - Packages/ProjectsKit/Tests
+excluded:
+  - Packages/ProjectsKit/.build
+
+opt_in_rules:
+  - closure_spacing
+  - contains_over_first_not_nil
+  - empty_count
+  - explicit_init
+  - fatal_error_message
+  - first_where
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - last_where
+  - modifier_order
+  - redundant_nil_coalescing
+  - sorted_first_last
+  - toggle_bool
+  - vertical_whitespace_closing_braces
+
+analyzer_rules:
+  - unused_import
+
+disabled_rules:
+  - todo
+  # Trailing commas keep diffs of multi-line literals to one line.
+  - trailing_comma
+  # SwiftUI view builders and test fixtures legitimately contain long argument lists.
+  - function_parameter_count
+
+line_length:
+  warning: 160
+  error: 200
+  ignores_comments: true
+  ignores_urls: true
+type_body_length:
+  warning: 400
+  error: 600
+file_length:
+  warning: 600
+  error: 800
+function_body_length:
+  warning: 80
+  error: 120
+cyclomatic_complexity:
+  warning: 10
+  ignores_case_statements: true
+large_tuple:
+  warning: 3
+identifier_name:
+  excluded: [id, x, y, a, b, c, to]
+type_name:
+  max_length: 50
+nesting:
+  type_level: 2
+
+custom_rules:
+  no_print:
+    name: "No print"
+    regex: "^\\s*print\\("
+    message: "Use os.Logger instead of print."
+    severity: warning
+    excluded: ".*Tests/.*"

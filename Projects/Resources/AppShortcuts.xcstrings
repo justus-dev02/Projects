@@ -1,0 +1,85 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Add a task in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aufgabe in ${applicationName} hinzufügen"
+          }
+        },
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Add a task in ${applicationName}",
+              "New ${applicationName} task"
+            ]
+          }
+        }
+      }
+    },
+    "Complete a task in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aufgabe in ${applicationName} erledigen"
+          }
+        },
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Complete a task in ${applicationName}"
+            ]
+          }
+        }
+      }
+    },
+    "New ${applicationName} task" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue ${applicationName}-Aufgabe"
+          }
+        }
+      }
+    },
+    "Show today in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Heute in ${applicationName} anzeigen"
+          }
+        },
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Show today in ${applicationName}",
+              "What is due in ${applicationName}"
+            ]
+          }
+        }
+      }
+    },
+    "What is due in ${applicationName}" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Was ist in ${applicationName} fällig"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

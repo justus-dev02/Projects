@@ -1,0 +1,8 @@
+// Copy this file to `Config/Local.xcconfig` and set your own values. Local.xcconfig is ignored by
+// Git, so your team ID and identifiers never end up in a commit.
+
+// Your Apple Developer team ID (Xcode › Settings › Accounts, or developer.apple.com › Membership).
+DEVELOPMENT_TEAM = ABCDE12345
+
+// A reverse-DNS identifier you own. The widget, tests, App Group and iCloud container derive from it.
+PROJECTS_BUNDLE_ID = com.example.Projects
